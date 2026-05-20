@@ -3,3 +3,4 @@ Equipe:
     Guilherme Fonteles
     Victor Bacelar
     Pedro Peixoto
+    Lucas Soares
