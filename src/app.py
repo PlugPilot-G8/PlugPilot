@@ -30,10 +30,10 @@ def cadastro_menu():
         opcao = input("Escolha uma opção: ")
         if opcao == "1":
             print("Cadastro de Empresário selecionado.")
-            # Aqui você pode chamar a função de cadastro para empresário
+            # Chama a função de cadastro para empresário
         elif opcao == "2":
             print("Cadastro de Motorista selecionado.")
-            # Aqui você pode chamar a função de cadastro para motorista
+            # Chama a função de cadastro para motorista
         elif opcao == "3":
             menu_principal()
             break
@@ -50,10 +50,54 @@ def login_menu():
         opcao = input("Escolha uma opção: ")
         if opcao == "1":
             print("Login de Empresário selecionado.")
-            # Aqui você pode chamar a função de login para empresário
+            # Chama a função de login para empresário
         elif opcao == "2":
             print("Login de Motorista selecionado.")
-            # Aqui você pode chamar a função de login para motorista
+            # Chama a função de login para motorista
+        elif opcao == "3":
+            menu_principal()
+            break
+        else:
+            print("Opção inválida. Por favor, tente novamente.")
+
+def menu_motorista():
+    while True:
+        print("------ Menu do Motorista ------")
+        print("1. Visualizar Unidades Disponíveis")
+        print("2. Gerenciar Reservas")
+        print("3. Sair")
+        print("------------------------------")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            print("Visualizar Unidades Disponíveis selecionado.")
+            # Chama a função para visualizar unidades disponíveis
+        elif opcao == "2":
+            print("Gerenciar Reservas selecionado.")
+            # Chama a função para gerenciar reservas
+        elif opcao == "3":
+            menu_principal()
+            break
+        else:
+            print("Opção inválida. Por favor, tente novamente.")
+
+def menu_empresario():
+    while True:
+        print("------ Menu do Empresário ------")
+        print("1. Gerenciar Unidades")
+        print("2. Gerenciar Dispositivos")
+        print("3. Sair")
+        print("-------------------------------")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            print("Gerenciar Unidades selecionado.")
+            # Chama a função para gerenciar unidades
+        elif opcao == "2":
+            print("Gerenciar Dispositivos selecionado.")
+            # Chama a função para gerenciar dispositivos
         elif opcao == "3":
             menu_principal()
             break
