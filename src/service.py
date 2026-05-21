@@ -2,10 +2,9 @@
 
 # Responsavel por gerenciar os carregadores (CRUD)
 import json
+from database_manager import carregar_database, atualizar_database
 
-with open("banco.json", "r", encoding="utf-8") as arquivo:
-    dados = json.load(arquivo)
-
+dados = carregar_database()
 chargers = dados.get("carregadores", {})
 
 # carregar banco de dados
@@ -40,9 +39,7 @@ def criar_carregador(chargers):
         }
     })
     
-    print("criando carregador...")
-
-criar_carregador(chargers)
+    atualizar_database(dados)
 
 # Função responsável por exibir o carregador
 def visualizar_carregador(id_carregador):
@@ -65,14 +62,82 @@ def deletar_carregador():
 units = dados.get("unidades", {})
 
 # Função responsável por criar um novo carregador
-def criar_unidade():
-    print("criando unidade...")
+def gerar_id_unidade():
+    return f"und_{len(units) + 1:03d}"
+
+def buscar_cep_info(cep):
+    # Simulação de busca de informações do CEP
+    # Em um cenário real, você poderia usar uma API externa para obter essas informações
+    return {
+        "endereco_formatado": f"Endereço formatado para CEP {cep}",
+        "coordenadas": {
+            "latitude": -23.561684,
+            "longitude": -46.625378
+        }
+    }
+
+def criar_unidade(id_dono):
+    # Gerar um ID único para a nova unidade
+    id_unidade = gerar_id_unidade()
+
+    # Coleta o nome da unidade e valida se já existe
+    nome_unidade = input("Digite o nome da unidade: ")
+    if nome_unidade in [unit.get("nome_unidade") for unit in units.values()]:
+        print("Nome de unidade já existe. Por favor, escolha um nome diferente.")
+        return
+    
+    # Coleta o CEP e valida se já existe
+    cep = input("Digite o CEP da unidade: ")
+    if cep in [unit.get("CEP") for unit in units.values()]:
+        print("CEP já cadastrado para outra unidade. Por favor, verifique o CEP e tente novamente.")
+        return
+    
+    # Coleta o horário de abertura e valida se é uma entrada válida
+    abertura = input("Digite o horário de abertura: ")
+    if not abertura:
+        print("Horário de abertura é obrigatório. Por favor, tente novamente.")
+        return
+    fechamento = input("Digite o horário de fechamento: ")
+    if not fechamento:
+        print("Horário de fechamento é obrigatório. Por favor, tente novamente.")
+        return
+    
+    # Coleta se a unidade funciona aos finais de semana e valida a entrada
+    funciona_fds = input("Funciona aos finais de semana? (s/n): ").lower()
+    if funciona_fds == 's':
+        funciona_fds = True
+    elif funciona_fds == 'n':        
+        funciona_fds = False
+    else:
+        print("Entrada inválida para funcionamento aos finais de semana. Por favor, digite 's' para sim ou 'n' para não.")
+        return
+
+    units.update({
+        id_unidade: {
+            "id_unidade": id_unidade,
+            "id_dono": id_dono,
+            "nome_unidade": nome_unidade,
+            "CEP": cep,
+            "endereco_formatado": buscar_cep_info(cep)["endereco_formatado"],
+            "coordenadas": buscar_cep_info(cep)["coordenadas"],
+            "horario_funcionamento": {
+                "abertura": abertura,
+                "fechamento": fechamento,
+                "funciona_fds": funciona_fds
+            },
+            "avaliacao_media": 0.0
+        }
+    })
+    
+    atualizar_database(dados)
+
+criar_unidade("usr_001")
 
 # Função responsável por exibir o carregador
 def visualizar_unidade(id_unidade):
     unit = units.get(id_unidade)
     if unit:
-        print(f"Unidade: {unit['nome_fantasia']}")
+        print(f"Unidade: {unit['nome_unidade']}")
     else:
         print("Unidade não encontrada.")
 
