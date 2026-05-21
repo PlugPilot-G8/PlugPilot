@@ -1,5 +1,19 @@
 import json
 
+def carregar_database():
+    try:
+        with open("banco.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+        return dados
+    except FileNotFoundError:
+        print("Arquivo de banco de dados não encontrado. Criando um novo banco...")
+        criar_database()
+        return carregar_database()
+    except json.JSONDecodeError:
+        print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
+        criar_database()
+        return carregar_database()
+
 def criar_database():
     dados = {
         "usuarios": {
