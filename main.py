@@ -1,6 +1,6 @@
 # main.py - Responsável por iniciar o sistema e criar a base de dados, se necessário.
 
-from src.DataBaseManager import carregar_database, criar_database
+from src.database_manager import carregar_database, criar_database
 from src.app import menu_principal
 
 if __name__ == "__main__":

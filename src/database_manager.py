@@ -1,18 +1,6 @@
-import json
+# DataBaseManager.py - Responsável por criar e carregar a base de dados do sistema.
 
-def carregar_database():
-    try:
-        with open("banco.json", "r", encoding="utf-8") as arquivo:
-            dados = json.load(arquivo)
-        return dados
-    except FileNotFoundError:
-        print("Arquivo de banco de dados não encontrado. Criando um novo banco...")
-        criar_database()
-        return carregar_database()
-    except json.JSONDecodeError:
-        print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
-        criar_database()
-        return carregar_database()
+import json
 
 def criar_database():
     dados = {
@@ -80,7 +68,22 @@ def criar_database():
         }
     }
 
+
     with open("banco.json", "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, indent=4, ensure_ascii=False)
 
     print("Banco inicial criado com sucesso!")
+
+def carregar_database():
+    try:
+        with open("banco.json", "r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+        return dados
+    except FileNotFoundError:
+        print("Arquivo de banco de dados não encontrado. Criando um novo banco...")
+        criar_database()
+        return carregar_database()
+    except json.JSONDecodeError:
+        print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
+        criar_database()
+        return carregar_database()
