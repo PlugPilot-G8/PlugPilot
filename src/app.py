@@ -1,5 +1,6 @@
 # app.py - Responsável por gerenciar o menu principal, login e cadastro.
-
+from database_manager import carregar_database 
+dados = carregar_database()
 def menu_principal():
     while True:
         print("------ Menu Principal - PlugPilot! ------")
@@ -103,3 +104,25 @@ def menu_empresario():
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
+
+unidades = dados.get("unidades")
+        
+def unidades_disponiveis():
+    print("------Estações disponiveis------")
+    for i in range(len(unidades)):
+        unidade_id = list(unidades.keys())[i]
+        unidade = unidades.get(unidade_id)
+        nome = unidade.get("nome_fantasia")
+        print(f"{i+1}.",nome)
+    print("--------------------------------")
+
+    opcao = int(input("escolha oque voce deseja: "))
+    
+    unidade_id = list(unidades.keys())[opcao - 1]
+
+    unidade_escolhida = unidades[unidade_id]
+
+    print("Você escolheu:", unidade_escolhida["nome_fantasia"])
+    #chamaar fubçao visualizar carregadores
+
+unidades_disponiveis()    
