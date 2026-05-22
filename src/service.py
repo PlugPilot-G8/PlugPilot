@@ -42,23 +42,33 @@ def buscar_cep_info(cep):
     }
 
 # Carregadores
-chargers = dados.get("carregadores", {})
+carregadores = dados.get("carregadores", {})
 
 # Função responsável por criar um novo carregador
-def criar_carregador(chargers,  id_unidade):
+def criar_carregador(carregadores, id_unidade):
+
     id_carregador = gerar_id("carregador")
-    if id_carregador in chargers:
-        print("ID de carregador já existe. Por favor, escolha um ID diferente.")
+
+    if id_carregador in carregadores:
+        print("ID de carregador já existe. Escolha outro.")
         return
-    
+
+    # Recebe as informacoes para criar o carregador
     modelo = input("Digite o modelo do carregador: ")
     fabricante = input("Digite o fabricante do carregador: ")
     tipo_corrente = input("Digite o tipo de corrente (AC/DC): ")
     potencia_kw = float(input("Digite a potência em kW: "))
     tipo_conector = input("Digite o tipo de conector: ")
     preco_por_kwh = float(input("Digite o preço por kWh: "))
-    
+    status_atual = input("Digite o status do carregador (Disponivel/Indisponivel): ")
+    ultima_manutencao = input("Digite a data da última manutenção (AAAA-MM-DD): ")
+    permite_reserva = input("Permite reserva? (true/false): ").lower()
+    fila_virtual = input("Possui fila virtual? (true/false): ").lower()
+    plug_and_charge = input("Possui Plug and Charge? (true/false): ").lower()
+
+    # Adiciona as informacoes no banco de dados
     dados["carregadores"].update({
+
         id_carregador: {
             "id_unidade": id_unidade,
             "modelo": modelo,
@@ -66,27 +76,152 @@ def criar_carregador(chargers,  id_unidade):
             "tipo_corrente": tipo_corrente,
             "potencia_kw": potencia_kw,
             "tipo_conector": tipo_conector,
-            "preco_por_kwh": preco_por_kwh
+            "preco_por_kwh": preco_por_kwh,
+            "status_atual": status_atual,
+            "ultima_manutencao": ultima_manutencao,
+            "recursos": {
+                "permite_reserva": permite_reserva,
+                "fila_virtual": fila_virtual,
+                "plug_and_charge": plug_and_charge
+            }
         }
     })
-    
+
     atualizar_database(dados)
 
 # Função responsável por exibir o carregador
 def visualizar_carregador(id_carregador):
-    charger = chargers.get(id_carregador)
-    if charger:
-        print(f"Carregador: {charger['modelo'][:20]} - {charger['fabricante']}")
+    carregador = carregadores.get(id_carregador)
+    if carregador:
+        print(f"Carregador: {carregador['modelo'][:20]} - {carregador['fabricante']}")
     else:
         print("Carregador não encontrado.")
 
 # Função responsável por editar o carregador
-def editar_carregador():
-    print("editando carregador...")
+def editar_carregador(id_carregador, alteracao):
+    carregador = dados.get("carregadores", {}).get(id_carregador)
+    if carregador:
+        # Responsavel por alterar o modelo
+        if alteracao == "modelo":
+            nova_info = input("Digite o novo modelo: ")
+
+            if nova_info == carregador.get("modelo"):
+                print("Por favor, escolha um modelo diferente do atual.")
+                return
+
+            carregador["modelo"] = nova_info
+
+        # Responsavel por alterar o fabricante
+        if alteracao == "fabricante":
+            nova_info = input("Digite o novo fabricante: ")
+
+            if nova_info == carregador.get("fabricante"):
+                print("Por favor, escolha um fabricante diferente do atual.")
+                return
+
+            carregador["fabricante"] = nova_info
+
+        # Responsavel por alterar o tipo de corrente
+        if alteracao == "tipo_corrente":
+            nova_info = input("Digite o novo tipo de corrente: ")
+
+            if nova_info == carregador.get("tipo_corrente"):
+                print("Escolha um tipo de corrente diferente.")
+                return
+
+            carregador["tipo_corrente"] = nova_info
+
+        # Responsavel por alterar a potencia
+        if alteracao == "potencia_kw":
+            nova_info = float(input("Digite a nova potência: "))
+
+            if nova_info == carregador.get("potencia_kw"):
+                print("Escolha uma potência diferente.")
+                return
+
+            carregador["potencia_kw"] = nova_info
+
+        # Responsavel por alterar ol tipo de conector
+        if alteracao == "tipo_conector":
+            nova_info = input("Digite o novo tipo de conector: ")
+
+            if nova_info == carregador.get("tipo_conector"):
+                print("Escolha um conector diferente.")
+                return
+
+            carregador["tipo_conector"] = nova_info
+
+        # Responsavel por alterar o preco 
+        if alteracao == "preco_por_kwh":
+            nova_info = float(input("Digite o novo preço por kWh: "))
+
+            if nova_info == carregador.get("preco_por_kwh"):
+                print("Escolha um preço diferente.")
+                return
+
+            carregador["preco_por_kwh"] = nova_info
+
+        # Responsavel por informar o status
+        if alteracao == "status_atual":
+            nova_info = input("Digite o novo status: ")
+
+            if nova_info == carregador.get("status_atual"):
+                print("Escolha um status diferente.")
+                return
+
+            carregador["status_atual"] = nova_info
+
+        # Responsavel por informar a ultima manutencao
+        if alteracao == "ultima_manutencao":
+            nova_info = input("Digite a nova data: ")
+
+            if nova_info == carregador.get("ultima_manutencao"):
+                print("Escolha uma data diferente.")
+                return
+
+            carregador["ultima_manutencao"] = nova_info
+
+        # Responsavel pela reserva
+        if alteracao == "permite_reserva":
+            nova_info = input("Permite reserva (true/false): ").lower() == "true"
+
+            if nova_info == carregador["recursos"].get("permite_reserva"):
+                print("O valor já é o atual.")
+                return
+
+            carregador["recursos"]["permite_reserva"] = nova_info
+
+        # Responsavel pela fila virtual
+        if alteracao == "fila_virtual":
+            nova_info = input("Fila virtual (true/false): ").lower() == "true"
+
+            if nova_info == carregador["recursos"].get("fila_virtual"):
+                print("O valor já é o atual.")
+                return
+
+            carregador["recursos"]["fila_virtual"] = nova_info
+
+        # Responsavel pela a alteracao do plug and charge
+        if alteracao == "plug_and_charge":
+            nova_info = input("Plug and Charge (true/false): ").lower() == "true"
+
+            if nova_info == carregador["recursos"].get("plug_and_charge"):
+                print("O valor já é o atual.")
+                return
+
+            carregador["recursos"]["plug_and_charge"] = nova_info
+    else:
+        print("Carregador não encontrado.")
 
 # Função resposável por deletar o carregador
-def deletar_carregador():
-    print("deletando carregador...")
+def deletar_carregador(id_carregador):  
+    carregador = dados.get("carregador", {}).get(id_carregador)
+    if carregador :
+        del dados["carregadores"][id_carregador]
+        atualizar_database(dados)
+        print(f"carregador {id_carregador} foi deletado!")
+    else:
+        print("carregador não encontrado.")
 
 # Unidades
 unidades = dados.get("unidades", {})
