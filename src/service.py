@@ -2,25 +2,43 @@
 
 # Responsavel por gerenciar os carregadores (CRUD)
 import json
+import random
 from datetime import datetime
 from database_manager import carregar_database, atualizar_database
 
 dados = carregar_database()
+
+# Definição dos tipos de entidades e seus intervalos de prefixo para geração de IDs
+TIPOS = {
+    "carregador": (0, 30),
+    "unidade": (31, 50),
+    "usuario": (51, 70),
+    "reserva": (71, 99)
+}
+
+# Função para gerar um ID único para cada tipo de entidade
+def gerar_id(tipo):
+    if tipo not in TIPOS:
+        raise ValueError("Tipo inválido")
+
+    inicio, fim = TIPOS[tipo]
+
+    prefixo = random.randint(inicio, fim)
+
+    horario = datetime.now().strftime("%H%M%S")
+
+    return f"{prefixo:02}{horario}"
+
+# Carregadores
 chargers = dados.get("carregadores", {})
 
-# carregar banco de dados
-# Coletar informações
-# Validar as informações
-# Salvar as informações no banco de dados
-
 # Função responsável por criar um novo carregador
-def criar_carregador(chargers):
-    id_carregador = input("Digite o ID do carregador: ")
+def criar_carregador(chargers,  id_unidade):
+    id_carregador = gerar_id("carregador")
     if id_carregador in chargers:
         print("ID de carregador já existe. Por favor, escolha um ID diferente.")
         return
-
-    id_unidade = input("Digite o ID da unidade associada: ")
+    
     modelo = input("Digite o modelo do carregador: ")
     fabricante = input("Digite o fabricante do carregador: ")
     tipo_corrente = input("Digite o tipo de corrente (AC/DC): ")
@@ -58,17 +76,12 @@ def editar_carregador():
 def deletar_carregador():
     print("deletando carregador...")
 
-# Responsavel por gerenciar os carregadores (CRUD)
-
+# Unidades
 units = dados.get("unidades", {})
-
-# Função responsável por criar um novo carregador
-def gerar_id_unidade():
-    return datetime.now().strftime("%Y%m%d%H%M%S%f")
 
 def buscar_cep_info(cep):
     # Simulação de busca de informações do CEP
-    # Em um cenário real, você poderia usar uma API externa para obter essas informações
+
     return {
         "endereco_formatado": f"Endereço formatado para CEP {cep}",
         "coordenadas": {
@@ -79,7 +92,7 @@ def buscar_cep_info(cep):
 
 def criar_unidade(id_dono):
     # Gerar um ID único para a nova unidade
-    id_unidade = gerar_id_unidade()
+    id_unidade = gerar_id("unidade")
 
     # Coleta o nome da unidade e valida se já existe
     nome_unidade = input("Digite o nome da unidade: ")
