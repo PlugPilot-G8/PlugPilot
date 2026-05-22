@@ -35,6 +35,137 @@ def buscar_cep_info(cep):
             "longitude": -46.625378
         }
     }
+usuarios = dados.get("usuarios", {})
+def cadastrar_usuario():
+
+    nome = input("Nome: ")
+    tipo_usuario = input("Tipo (motorista/empresario): ")
+    documento = input("CPF/CNPJ: ")
+    email = input("Email: ")
+    telefone = input("Telefone: ")
+    senha = input("Senha: ")
+
+    # Verificar email existente
+    for usuario in dados["usuarios"].values():
+        if usuario["email"] == email:
+            print("Email já cadastrado!")
+            return
+
+    id_usuario = gerar_id("usuario")
+
+    novo_usuario = {
+        "id_usuario": id_usuario,
+        "nome": nome,
+        "tipo_usuario": tipo_usuario,
+        "documento": documento,
+        "email": email,
+        "senha": senha,
+        "telefone": telefone,
+        "data_cadastro": datetime.now().isoformat(),
+        "historico_reservas": []
+    }
+
+    dados["usuarios"][id_usuario] = novo_usuario
+
+    atualizar_database(dados)
+
+    print("Usuário cadastrado com sucesso!")
+
+def atualizar_usuario(id_usuario, alteracao):
+
+    if id_usuario not in dados["usuarios"]:
+        print("Usuário não encontrado!")
+        return
+
+    usuario = dados["usuarios"][id_usuario]
+
+    if alteracao=="nome":
+        nova_info=input("Digite o novo nome: ")
+        if usuario["nome"]==nova_info:
+            print("Escolha um nome diferente do atual")
+            return
+        usuario["nome"] = nova_info
+    
+    if alteracao=="documento":
+        nova_info=input("Digite um novo número de documento: ")
+        if usuario["documento"]==nova_info:
+            print("Escolha um número de documento diferente do atual")
+            return
+        usuario["documento"]=nova_info
+
+    if alteracao=="email":
+        nova_info=input("Digite um novo email: ")
+        if usuario["email"]==nova_info:
+            print("Escolha um email diferente do atual")
+            return
+        if nova_info in [usuario.get("email") for usuario in usuarios.values()]:
+                print("Email já cadastrado para outro usuário. Por favor, verifique o email e tente novamente.")
+                return
+        usuario["email"]=nova_info
+    
+    if alteracao=="senha":
+        nova_info=input("Digite uma nova senha: ")
+        if usuario["senha"]==nova_info:
+            print("Escolha uma senha diferente da atual")
+            return
+        usuario["senha"]=nova_info
+    
+    if alteracao=="telefone":
+        nova_info=input("Digite um novo telefone: ")
+        if usuario["telefone"]==nova_info:
+            print("Escolha um telefone diferente do atual")
+            return
+        usuario["telefone"]=nova_info
+
+    atualizar_database(dados)
+
+    print("Usuário atualizado com sucesso!")
+
+def visualizar_usuario(id_usuario):
+    
+    if id_usuario not in dados["usuarios"]:
+        print("Usuário não encontrado!")
+        return
+
+    usuario= usuarios.get(id_usuario)
+    print("\n===== PERFIL USUÁRIO =====")
+
+    print(f"""
+        Nome: {usuario['nome']}
+        Email: {usuario['email']}
+        Tipo: {usuario['tipo_usuario']}
+        Documento: {usuario['documento']}
+        Telefone: {usuario['telefone']}
+    """)
+
+def deletar_usuario(id_usuario):
+
+    if id_usuario in dados["usuarios"]:
+        del dados["usuarios"][id_usuario]
+        atualizar_database(dados)
+        print("Usuário removido com sucesso!")
+    else:
+        print("Usuário não encontrado!")
+#LOGIN
+def login(tipo_usuario):
+    email = input("Email: ")
+    senha = input("Senha: ")
+    if tipo_usuario== "motorista":
+        documento=input("Digite o seu CPF: ")
+    elif tipo_usuario=="empresario":
+        documento=input("Digite o seu CNPJ: ")  
+
+    for usuario in usuarios.values():
+
+        if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"]==documento:
+
+            print(f"\nBem-vindo {usuario['nome']}!")
+            print(f"Tipo de usuário: {usuario['tipo_usuario']}")
+            return usuario
+
+    print("Email ou senha incorretos!")
+    return None
+
 
 # Carregadores
 carregadores = dados.get("carregadores", {})
