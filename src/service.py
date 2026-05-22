@@ -2,6 +2,7 @@
 
 # Responsavel por gerenciar os carregadores (CRUD)
 import json
+from datetime import datetime
 from database_manager import carregar_database, atualizar_database
 
 dados = carregar_database()
@@ -63,7 +64,7 @@ units = dados.get("unidades", {})
 
 # Função responsável por criar um novo carregador
 def gerar_id_unidade():
-    return f"und_{len(units) + 1:03d}"
+    return datetime.now().strftime("%Y%m%d%H%M%S%f")
 
 def buscar_cep_info(cep):
     # Simulação de busca de informações do CEP
@@ -131,8 +132,6 @@ def criar_unidade(id_dono):
     
     atualizar_database(dados)
 
-criar_unidade("usr_001")
-
 # Função responsável por exibir o carregador
 def visualizar_unidade(id_unidade):
     unit = units.get(id_unidade)
@@ -142,10 +141,83 @@ def visualizar_unidade(id_unidade):
         print("Unidade não encontrada.")
 
 # Função responsável por editar o carregador
-def editar_unidade():
-    print("editando unidade...")
+def editar_unidade(id_unidade, alteração):
+    unit = dados.get("unidades", {}).get(id_unidade)
+
+    if unit:
+        print(f"Editando unidade: {unit['nome_unidade']}")
+        # Altera o nome da unidade
+        if alteração == "nome_unidade":
+            nova_info = input("Digite o novo nome da unidade: ")
+
+            if nova_info in [unit.get("nome_unidade") for unit in units.values()]:
+                print("Nome de unidade já existe. Por favor, escolha um nome diferente.")
+                return
+            unit["nome_unidade"] = nova_info
+
+        # Altera o CEP da unidade
+        if alteração == "CEP":
+            nova_info = input("Digite o novo CEP da unidade: ")
+
+            if nova_info in [unit.get("CEP") for unit in units.values()]:
+                print("CEP já cadastrado para outra unidade. Por favor, verifique o CEP e tente novamente.")
+                return
+
+        # Altera o horário de funcionamento da unidade
+        if alteração == "horario_funcionamento":
+            nova_info_abertura = input("Digite o novo horário de abertura: ")
+            nova_info_fechamento = input("Digite o novo horário de fechamento: ")
+
+            if nova_info_funciona_fds == 's':
+                nova_info_funciona_fds = True
+            elif nova_info_funciona_fds == 'n':        
+                nova_info_funciona_fds = False
+            else:
+                print("Entrada inválida para funcionamento aos finais de semana. Por favor, digite 's' para sim ou 'n' para não.")
+                return
+
+            unit["horario_funcionamento"] = {
+                "abertura": nova_info_abertura,
+                "fechamento": nova_info_fechamento,
+                "funciona_fds": nova_info_funciona_fds
+            }
+    else:
+        print("Unidade não encontrada.")
 
 # Função resposável por deletar o carregador
-def deletar_unidade():
-    print("deletando unidade...")
+def deletar_unidade(id_unidade):
+    unit = dados.get("unidades", {}).get(id_unidade)
+    if unit:
+        del dados["unidades"][id_unidade]
+        atualizar_database(dados)
+        print(f"Unidade {id_unidade} deletada com sucesso.")
+    else:
+        print("Unidade não encontrada.")
 
+while True:
+    print("\nMenu de Unidades:")
+    print("1. Criar Unidade")
+    print("2. Visualizar Unidade")
+    print("3. Editar Unidade")
+    print("4. Deletar Unidade")
+    print("5. Sair")
+
+    escolha = input("Escolha uma opção: ")
+
+    if escolha == "1":
+        id_dono = input("Digite o ID do dono da unidade: ")
+        criar_unidade(id_dono)
+    elif escolha == "2":
+        id_unidade = input("Digite o ID da unidade: ")
+        visualizar_unidade(id_unidade)
+    elif escolha == "3":
+        id_unidade = input("Digite o ID da unidade: ")
+        alteração = input("Digite o campo a ser editado: ")
+        editar_unidade(id_unidade, alteração)
+    elif escolha == "4":
+        id_unidade = input("Digite o ID da unidade: ")
+        deletar_unidade(id_unidade)
+    elif escolha == "5":
+        break
+    else:
+        print("Opção inválida. Por favor, escolha uma opção válida.")
