@@ -1,5 +1,6 @@
 # app.py - Responsável por gerenciar o menu principal, login e cadastro.
-from database_manager import carregar_database 
+from .database_manager import carregar_database 
+
 dados = carregar_database()
 def menu_principal():
     while True:
@@ -112,7 +113,7 @@ def unidades_disponiveis():
     for i in range(len(unidades)):
         unidade_id = list(unidades.keys())[i]
         unidade = unidades.get(unidade_id)
-        nome = unidade.get("nome_fantasia")
+        nome = unidade.get("nome_unidade")
         print(f"{i+1}.",nome)
     print("--------------------------------")
 
@@ -122,7 +123,5 @@ def unidades_disponiveis():
 
     unidade_escolhida = unidades[unidade_id]
 
-    print("Você escolheu:", unidade_escolhida["nome_fantasia"])
-    #chamaar fubçao visualizar carregadores
-
-unidades_disponiveis()    
+    print("Você escolheu:", unidade_escolhida["nome_unidade"])
+    #chamaar fubçao visualizar carregadores 

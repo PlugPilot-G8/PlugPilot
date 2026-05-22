@@ -3,7 +3,7 @@
 import json
 import random
 from datetime import datetime
-from database_manager import carregar_database, atualizar_database
+from .database_manager import carregar_database, atualizar_database
 
 dados = carregar_database()
 
