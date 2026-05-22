@@ -32,7 +32,7 @@ def criar_database():
             "und_001": {
                 "id_unidade": "und_001",
                 "id_dono": "usr_001",
-                "nome_fantasia": "PlugPilot Station - Jardins",
+                "nome_unidade": "PlugPilot Station - Jardins",
                 "endereco_formatado": "Alameda Lorena, 1234 - Jardins, São Paulo - SP, 01424-001",
                 "coordenadas": {
                     "latitude": -23.561684,

@@ -29,6 +29,18 @@ def gerar_id(tipo):
 
     return f"{prefixo:02}{horario}"
 
+# Função para buscar informações do CEP (simulação)
+def buscar_cep_info(cep):
+    # Simulação de busca de informações do CEP
+
+    return {
+        "endereco_formatado": f"Endereço formatado para CEP {cep}",
+        "coordenadas": {
+            "latitude": -23.561684,
+            "longitude": -46.625378
+        }
+    }
+
 # Carregadores
 chargers = dados.get("carregadores", {})
 
@@ -77,32 +89,22 @@ def deletar_carregador():
     print("deletando carregador...")
 
 # Unidades
-units = dados.get("unidades", {})
+unidades = dados.get("unidades", {})
 
-def buscar_cep_info(cep):
-    # Simulação de busca de informações do CEP
-
-    return {
-        "endereco_formatado": f"Endereço formatado para CEP {cep}",
-        "coordenadas": {
-            "latitude": -23.561684,
-            "longitude": -46.625378
-        }
-    }
-
+# Função responsável por criar uma nova unidade
 def criar_unidade(id_dono):
     # Gerar um ID único para a nova unidade
     id_unidade = gerar_id("unidade")
 
     # Coleta o nome da unidade e valida se já existe
     nome_unidade = input("Digite o nome da unidade: ")
-    if nome_unidade in [unit.get("nome_unidade") for unit in units.values()]:
+    if nome_unidade in [unidade.get("nome_unidade") for unidade in unidades.values()]:
         print("Nome de unidade já existe. Por favor, escolha um nome diferente.")
         return
     
     # Coleta o CEP e valida se já existe
     cep = input("Digite o CEP da unidade: ")
-    if cep in [unit.get("CEP") for unit in units.values()]:
+    if cep in [unidade.get("CEP") for unidade in unidades.values()]:
         print("CEP já cadastrado para outra unidade. Por favor, verifique o CEP e tente novamente.")
         return
     
@@ -126,7 +128,7 @@ def criar_unidade(id_dono):
         print("Entrada inválida para funcionamento aos finais de semana. Por favor, digite 's' para sim ou 'n' para não.")
         return
 
-    units.update({
+    unidades.update({
         id_unidade: {
             "id_unidade": id_unidade,
             "id_dono": id_dono,
@@ -147,39 +149,54 @@ def criar_unidade(id_dono):
 
 # Função responsável por exibir o carregador
 def visualizar_unidade(id_unidade):
-    unit = units.get(id_unidade)
-    if unit:
-        print(f"Unidade: {unit['nome_unidade']}")
+    unidade = unidades.get(id_unidade)
+    if unidade:
+        print(f"-------------------- {unidade['nome_unidade']} --------------------")
+        print(f"Endereço: {unidade['endereco_formatado']}")
+        print(f"Horário de Funcionamento: {unidade['horario_funcionamento']['abertura']} - {unidade['horario_funcionamento']['fechamento']}")
+        print(f"Funciona aos Finais de Semana: {'Sim' if unidade['horario_funcionamento']['funciona_fds'] else 'Não'}")
+        print(f"Avaliação Média: {unidade['avaliacao_media']}")
+
+        print("\nCarregadores:")
+        for i in chargers.values():
+            if i["id_unidade"] == id_unidade:
+                visualizar_carregador(i["id_carregador"])
+        print(f"--------------------------------------------------------------------")
     else:
         print("Unidade não encontrada.")
 
-# Função responsável por editar o carregador
-def editar_unidade(id_unidade, alteração):
-    unit = dados.get("unidades", {}).get(id_unidade)
+visualizar_unidade("und_001")
 
-    if unit:
-        print(f"Editando unidade: {unit['nome_unidade']}")
+# Função responsável por editar o carregador
+def editar_unidade(id_unidade, alteracao):
+    unidade = dados.get("unidades", {}).get(id_unidade)
+
+    if unidade:
+        print(f"Editando unidade: {unidade['nome_unidade']}")
         # Altera o nome da unidade
-        if alteração == "nome_unidade":
+        if alteracao == "nome_unidade":
             nova_info = input("Digite o novo nome da unidade: ")
 
-            if nova_info in [unit.get("nome_unidade") for unit in units.values()]:
+            if nova_info in [unidade.get("nome_unidade") for unidade in unidades.values()]:
                 print("Nome de unidade já existe. Por favor, escolha um nome diferente.")
                 return
-            unit["nome_unidade"] = nova_info
+            unidade["nome_unidade"] = nova_info
 
         # Altera o CEP da unidade
-        if alteração == "CEP":
+        if alteracao == "CEP":
             nova_info = input("Digite o novo CEP da unidade: ")
 
-            if nova_info in [unit.get("CEP") for unit in units.values()]:
+            if nova_info in [unidade.get("CEP") for unidade in unidades.values()]:
                 print("CEP já cadastrado para outra unidade. Por favor, verifique o CEP e tente novamente.")
                 return
+            unidade["CEP"] = nova_info
 
         # Altera o horário de funcionamento da unidade
-        if alteração == "horario_funcionamento":
+        if alteracao == "horario_funcionamento":
             nova_info_abertura = input("Digite o novo horário de abertura: ")
             nova_info_fechamento = input("Digite o novo horário de fechamento: ")
+
+            nova_info_funciona_fds = input("Funciona aos finais de semana? (s/n): ").lower()
 
             if nova_info_funciona_fds == 's':
                 nova_info_funciona_fds = True
@@ -189,7 +206,7 @@ def editar_unidade(id_unidade, alteração):
                 print("Entrada inválida para funcionamento aos finais de semana. Por favor, digite 's' para sim ou 'n' para não.")
                 return
 
-            unit["horario_funcionamento"] = {
+            unidade["horario_funcionamento"] = {
                 "abertura": nova_info_abertura,
                 "fechamento": nova_info_fechamento,
                 "funciona_fds": nova_info_funciona_fds
@@ -199,8 +216,8 @@ def editar_unidade(id_unidade, alteração):
 
 # Função resposável por deletar o carregador
 def deletar_unidade(id_unidade):
-    unit = dados.get("unidades", {}).get(id_unidade)
-    if unit:
+    unidade = dados.get("unidades", {}).get(id_unidade)
+    if unidade:
         del dados["unidades"][id_unidade]
         atualizar_database(dados)
         print(f"Unidade {id_unidade} deletada com sucesso.")
