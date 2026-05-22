@@ -1,0 +1,1 @@
+#authenticator.py - Responsável por fornecer funções de autenticação para o sistema, como login, logout, verificação de sessão, etc.

@@ -100,3 +100,7 @@ def carregar_database():
         print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
         criar_database()
         return carregar_database()
+    
+def atualizar_database(dados):
+    with open("banco.json", "w", encoding="utf-8") as arquivo:
+        json.dump(dados, arquivo, indent=4, ensure_ascii=False)
