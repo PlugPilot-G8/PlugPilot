@@ -11,6 +11,7 @@ def criar_database():
                 "tipo_usuario": "empresario",
                 "documento": "12.345.678/0001-99",
                 "email": "empresa@gmail.com",
+                "senha": "empresa123",
                 "telefone": "+5511999998888",
                 "data_cadastro": "2026-01-15T10:30:00Z"
             },
@@ -20,6 +21,7 @@ def criar_database():
                 "tipo_usuario": "motorista",
                 "documento": "123.456.789-00",
                 "email": "user@gmail.com",
+                "senha": "user123",
                 "telefone": "+5511988887777",
                 "data_cadastro": "2026-02-10T14:22:00Z",
                 "historico_reservas": [
