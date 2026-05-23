@@ -7,11 +7,15 @@ from .database_manager import carregar_database, atualizar_database
 from .validator import validar_email, validar_senha, validar_cpf, validar_cnpj, validar_telefone, validar_nome
 from .app import menu_motorista, menu_empresario
 
+# Carrega os dados do banco de dados
 dados = carregar_database()
 
+# Garante que as chaves "usuarios", "carregadores" e "unidades" existam no dicionário de dados
+usuarios = dados.get("usuarios", {})
 dados.setdefault("carregadores", {})
 dados.setdefault("unidades", {})
 
+#Geradores de ID para diferentes tipos de entidades no sistema.
 TIPOS = {
     "carregador": (0, 30),
     "unidade": (31, 50),
@@ -19,6 +23,7 @@ TIPOS = {
     "reserva": (71, 99)
 }
 
+# Função para gerar IDs únicos para diferentes tipos de entidades no sistema
 def gerar_id(tipo):
     if tipo not in TIPOS:
         raise ValueError("Tipo inválido")
@@ -29,16 +34,70 @@ def gerar_id(tipo):
 
     return f"{prefixo:02}{horario}"
 
+# Função para buscar informações de endereço e coordenadas com base no CEP fornecido
 def buscar_cep_info(cep):
+    #gera dados aleatórios para endereço e coordenadas, já que não é possível fazer requisições externas para obter informações reais de CEP
+    endereco_formatado = f"Endereço formatado para CEP {cep}"
+    coordenadas = {
+        "latitude": random.uniform(-23.0, -22.0),  # Gerar latitude aleatória dentro de um intervalo
+        "longitude": random.uniform(-46.0, -45.0)  # Gerar longitude aleatória dentro de um intervalo
+    }
+    
     return {
-        "endereco_formatado": f"Endereço formatado para CEP {cep}",
+        "endereco_formatado": endereco_formatado,
         "coordenadas": {
-            "latitude": -23.561684,
-            "longitude": -46.625378
+            "latitude": coordenadas["latitude"],
+            "longitude": coordenadas["longitude"]
         }
     }
-usuarios = dados.get("usuarios", {})
+    
+# Usuarios
+
+# Função para realizar o login de um usuário
+def login(tipo_usuario):
+    # Recebe e valida as informações do usuário
+    email = input("Email: ")
+    if not validar_email(email):
+        print("Email inválido! Por favor, tente novamente.")
+        return
+    
+    senha = input("Senha: ")
+    if not validar_senha(senha):
+        print("Senha inválida! Por favor, tente novamente.")
+        return
+    
+    if tipo_usuario== "motorista":
+        documento=input("Digite o seu CPF: ")
+        if not validar_cpf(documento):
+            print("CPF inválido! Por favor, tente novamente.")
+            return
+    
+    elif tipo_usuario=="empresario":
+        documento=input("Digite o seu CNPJ: ")
+        if not validar_cnpj(documento):
+            print("CNPJ inválido! Por favor, tente novamente.")
+            return
+    else:
+        print("Tipo de usuário inválido! Por favor, tente novamente.")
+        return
+
+    # Verifica as credenciais do usuário no banco de dados, comparando o email, senha e documento fornecidos com os registros existentes
+    for usuario in usuarios.values():
+        if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"]==documento:
+
+            print(f"\nBem-vindo {usuario['nome']}!")
+            if usuario["tipo_usuario"] == "motorista":
+                menu_motorista()
+            elif usuario["tipo_usuario"] == "empresario":
+                menu_empresario()
+            return
+
+    print("Email ou senha incorretos!")
+    return None
+
+# Função para cadastrar um novo usuário (empresário ou motorista)
 def cadastrar_usuario(tipo_usuario):
+    # Recebe e valida as informações do usuário
     nome = input("Nome: ")
     if not validar_nome(nome):
         print("Nome inválido! Por favor, tente novamente.")
@@ -54,6 +113,18 @@ def cadastrar_usuario(tipo_usuario):
             print("Email já cadastrado!")
             return
     
+    if tipo_usuario == "motorista":
+        documento = input("CPF: ")
+        if not validar_cpf(documento):
+            print("CPF inválido! Por favor, tente novamente.")
+            return
+    
+    elif tipo_usuario == "empresario":
+        documento = input("CNPJ: ")
+        if not validar_cnpj(documento):
+            print("CNPJ inválido! Por favor, tente novamente.")
+            return
+        
     senha = input("Senha: ")
     if not validar_senha(senha):
         print("Senha inválida! Por favor, tente novamente.")
@@ -63,29 +134,6 @@ def cadastrar_usuario(tipo_usuario):
     if not validar_telefone(telefone):
         print("Telefone inválido! Por favor, tente novamente.")
         return
-    
-    if tipo_usuario == "motorista":
-        documento = input("CPF: ")
-        if not validar_cpf(documento):
-            print("CPF inválido! Por favor, tente novamente.")
-            return
-        
-    elif tipo_usuario == "empresario":
-        documento = input("CNPJ: ")
-        if not validar_cnpj(documento):
-            print("CNPJ inválido! Por favor, tente novamente.")
-            return
-        
-    senha = input("Senha: ")    
-    if not validar_senha(senha):
-        print("Senha inválida! Por favor, tente novamente.")
-        return
-        
-    telefone = input("Telefone: ")
-    if not validar_telefone(telefone):
-        print("Telefone inválido! Por favor, tente novamente.")
-        return
-
 
     id_usuario = gerar_id("usuario")
 
@@ -107,15 +155,18 @@ def cadastrar_usuario(tipo_usuario):
 
     print("Usuário cadastrado com sucesso!")
 
+# Função para atualizar as informações de um usuário existente
 def atualizar_usuario(id_usuario, alteracao):
-
+    # Verifica se o usuário existe no banco de dados
     if id_usuario not in dados["usuarios"]:
         print("Usuário não encontrado!")
         return
 
+    # Obtém as informações do usuário a ser atualizado
     usuario = dados["usuarios"][id_usuario]
     tipo_usuario = usuario["tipo_usuario"]
 
+    # Recebe a nova informação a ser atualizada e valida de acordo com o tipo de alteração
     if alteracao=="nome":
         nova_info=input("Digite o novo nome: ")
         if usuario["nome"]==nova_info:
@@ -184,27 +235,29 @@ def atualizar_usuario(id_usuario, alteracao):
             return
         usuario["telefone"]=nova_info
 
+    # Atualiza as informações do usuário no banco de dados
     atualizar_database(dados)
 
     print("Usuário atualizado com sucesso!")
 
+# Função para visualizar as informações de um usuário específico
 def visualizar_usuario(id_usuario):
-    
+    # Verifica se o usuário existe no banco de dados
     if id_usuario not in dados["usuarios"]:
         print("Usuário não encontrado!")
         return
 
     usuario= usuarios.get(id_usuario)
-    print("\n===== PERFIL USUÁRIO =====")
+    # Exibe as informações do usuário de forma formatada
+    print("\n====== PERFIL USUÁRIO ======")
+    print('Nome: ', usuario['nome'])
+    print('Email: ', usuario['email'])
+    print('Tipo de usuário: ', usuario['tipo_usuario'])
+    print('Documento: ', usuario['documento'])
+    print('Telefone: ', usuario['telefone'])
+    print("\n============================")
 
-    print(f"""
-        Nome: {usuario['nome']}
-        Email: {usuario['email']}
-        Tipo: {usuario['tipo_usuario']}
-        Documento: {usuario['documento']}
-        Telefone: {usuario['telefone']}
-    """)
-
+# Função para deletar um usuário do sistema, verificando se o ID do usuário existe no banco de dados antes de realizar a exclusão
 def deletar_usuario(id_usuario):
 
     if id_usuario in dados["usuarios"]:
@@ -213,51 +266,11 @@ def deletar_usuario(id_usuario):
         print("Usuário removido com sucesso!")
     else:
         print("Usuário não encontrado!")
-#LOGIN
-def login(tipo_usuario):
-    email = input("Email: ")
-    if not validar_email(email):
-        print("Email inválido! Por favor, tente novamente.")
-        return
-    
-    senha = input("Senha: ")
-    if not validar_senha(senha):
-        print("Senha inválida! Por favor, tente novamente.")
-        return
-    
-    if tipo_usuario== "motorista":
-        documento=input("Digite o seu CPF: ")
-        if not validar_cpf(documento):
-            print("CPF inválido! Por favor, tente novamente.")
-            return
         
-    elif tipo_usuario=="empresario":
-        documento=input("Digite o seu CNPJ: ")
-        if not validar_cnpj(documento):
-            print("CNPJ inválido! Por favor, tente novamente.")
-            return
-    else:
-        print("Tipo de usuário inválido! Por favor, tente novamente.")
-        return
-
-    for usuario in usuarios.values():
-
-        if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"]==documento:
-
-            print(f"\nBem-vindo {usuario['nome']}!")
-            if usuario["tipo_usuario"] == "motorista":
-                menu_motorista()
-            elif usuario["tipo_usuario"] == "empresario":
-                menu_empresario()
-            return
-
-    print("Email ou senha incorretos!")
-    return None
-
-
 # Carregadores
 carregadores = dados.get("carregadores", {})
 
+# Função para criar um novo carregador
 def criar_carregador(carregadores, id_unidade):
     id_carregador = gerar_id("carregador")
 
@@ -265,6 +278,7 @@ def criar_carregador(carregadores, id_unidade):
         print("ID de carregador já existe. Tente novamente.")
         return
 
+    # Recebe as informações do carregador
     modelo = input("Digite o modelo do carregador: ")
     fabricante = input("Digite o fabricante do carregador: ")
     tipo_corrente = input("Digite o tipo de corrente (AC/DC): ")
@@ -278,6 +292,7 @@ def criar_carregador(carregadores, id_unidade):
     fila_virtual = input("Possui fila virtual? (true/false): ").lower() == "true"
     plug_and_charge = input("Possui Plug and Charge? (true/false): ").lower() == "true"
 
+    # Atualiza as informações do carregador no banco de dados
     dados["carregadores"].update({
         id_carregador: {
             "id_carregador": id_carregador,
@@ -301,6 +316,7 @@ def criar_carregador(carregadores, id_unidade):
     atualizar_database(dados)
     print(f"Carregador {id_carregador} criado com sucesso.")
 
+# Função para visualizar as informações de um carregador específico
 def visualizar_carregador(id_carregador):
     carregador = dados.get("carregadores", {}).get(id_carregador)
 
@@ -309,10 +325,13 @@ def visualizar_carregador(id_carregador):
     else:
         print("Carregador não encontrado.")
 
+# Função para editar as informações de um carregador existente
 def editar_carregador(id_carregador, alteracao):
     carregador = dados.get("carregadores", {}).get(id_carregador)
 
+    # Verifica se o carregador existe no banco de dados antes de realizar as alterações
     if carregador:
+        # Recebe a nova informação a ser atualizada e valida de acordo com o tipo de alteração, garantindo que a nova informação seja diferente da atual
         if alteracao == "modelo":
             nova_info = input("Digite o novo modelo: ")
 
@@ -412,12 +431,13 @@ def editar_carregador(id_carregador, alteracao):
 
             carregador["recursos"]["plug_and_charge"] = nova_info
 
+        # Atualiza as informações do carregador no banco de dados
         atualizar_database(dados)
         print("Carregador atualizado com sucesso.")
-
     else:
         print("Carregador não encontrado.")
 
+# Função para deletar um carregador do sistema, verificando se o ID do carregador existe no banco de dados antes de realizar a exclusão
 def deletar_carregador(id_carregador):
     carregador = dados.get("carregadores", {}).get(id_carregador)
 
@@ -431,39 +451,30 @@ def deletar_carregador(id_carregador):
 # Unidades
 unidades = dados.get("unidades", {})
 
+# Função para criar uma nova unidade
 def criar_unidade(id_dono):
-    id_unidade = gerar_id("unidade")
-
-    if id_unidade in unidades:
-        print("ID de unidade já existe. Tente novamente.")
-        return
-
+    # Recebe e valida as informações da unidade
     nome_unidade = input("Digite o nome da unidade: ")
-
     if nome_unidade in [unidade.get("nome_unidade") for unidade in unidades.values()]:
         print("Nome de unidade já existe. Por favor, escolha um nome diferente.")
         return
 
     cep = input("Digite o CEP da unidade: ")
-
     if cep in [unidade.get("CEP") for unidade in unidades.values()]:
         print("CEP já cadastrado para outra unidade. Por favor, verifique o CEP e tente novamente.")
         return
 
     abertura = input("Digite o horário de abertura: ")
-
     if not abertura:
         print("Horário de abertura é obrigatório. Por favor, tente novamente.")
         return
 
     fechamento = input("Digite o horário de fechamento: ")
-
     if not fechamento:
         print("Horário de fechamento é obrigatório. Por favor, tente novamente.")
         return
 
     funciona_fds = input("Funciona aos finais de semana? (s/n): ").lower()
-
     if funciona_fds == "s":
         funciona_fds = True
     elif funciona_fds == "n":
@@ -473,7 +484,9 @@ def criar_unidade(id_dono):
         return
 
     cep_info = buscar_cep_info(cep)
+    id_unidade = gerar_id("unidade")
 
+    # Atualiza as informações da unidade no banco de dados
     unidades.update({
         id_unidade: {
             "id_unidade": id_unidade,
@@ -494,10 +507,13 @@ def criar_unidade(id_dono):
     atualizar_database(dados)
     print(f"Unidade {id_unidade} criada com sucesso.")
 
+# Função para visualizar as informações de uma unidade específica
 def visualizar_unidade(id_unidade):
     unidade = unidades.get(id_unidade)
 
+    # Verifica se a unidade existe no banco de dados antes de exibir as informações
     if unidade:
+        # Exibe as informações da unidade de forma formatada, incluindo os carregadores disponíveis na unidade
         print(f"-------------------- {unidade['nome_unidade']} --------------------")
         print(f"Endereço: {unidade['endereco_formatado']}")
         print(f"Horário de Funcionamento: {unidade['horario_funcionamento']['abertura']} - {unidade['horario_funcionamento']['fechamento']}")
@@ -508,6 +524,7 @@ def visualizar_unidade(id_unidade):
 
         encontrou_carregador = False
 
+        # Exibe os carregadores disponíveis da unidade
         for carregador in carregadores.values():
             if carregador["id_unidade"] == id_unidade:
                 encontrou_carregador = True
@@ -517,14 +534,16 @@ def visualizar_unidade(id_unidade):
             print("Nenhum carregador cadastrado nessa unidade.")
 
         print(f"--------------------------------------------------------------------")
-
     else:
         print("Unidade não encontrada.")
 
+# Função para editar as informações de uma unidade existente
 def editar_unidade(id_unidade, alteracao):
     unidade = dados.get("unidades", {}).get(id_unidade)
 
+    # Verifica se a unidade existe no banco de dados antes de realizar as alterações
     if unidade:
+        # Recebe a nova informação a ser atualizada e valida de acordo com o tipo de alteração
         print(f"Editando unidade: {unidade['nome_unidade']}")
 
         if alteracao == "nome_unidade":
@@ -569,12 +588,14 @@ def editar_unidade(id_unidade, alteracao):
                 "funciona_fds": nova_info_funciona_fds
             }
 
+        # Atualiza as informações da unidade no banco de dados
         atualizar_database(dados)
         print("Unidade atualizada com sucesso.")
 
     else:
         print("Unidade não encontrada.")
 
+# Função para deletar uma unidade do sistema
 def deletar_unidade(id_unidade):
     unidade = dados.get("unidades", {}).get(id_unidade)
 
