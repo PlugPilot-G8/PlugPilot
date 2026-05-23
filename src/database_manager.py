@@ -2,6 +2,7 @@
 
 import json
 
+# Função para criar a base de dados inicial do sistema, com dados de exemplo para usuários, unidades, carregadores e reservas
 def criar_database():
     dados = {
         "usuarios": {
@@ -89,6 +90,7 @@ def criar_database():
 
     print("Banco inicial criado com sucesso!")
 
+# Função para carregar o banco de dados do sistema, criando um novo banco caso o arquivo não exista ou esteja corrompido
 def carregar_database():
     try:
         with open("banco.json", "r", encoding="utf-8") as arquivo:
@@ -102,7 +104,8 @@ def carregar_database():
         print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
         criar_database()
         return carregar_database()
-    
+
+# Função para atualizar o banco de dados com as alterações realizadas no sistema
 def atualizar_database(dados):
     with open("banco.json", "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, indent=4, ensure_ascii=False)

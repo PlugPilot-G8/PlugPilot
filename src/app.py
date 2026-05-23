@@ -1,7 +1,10 @@
 # app.py - Responsável por gerenciar o menu principal, login e cadastro.
 from .database_manager import carregar_database 
 
+# Carrega a base de dados do sistema para ser utilizada na função de visualização de unidades
 dados = carregar_database()
+
+# Função para exibir o menu principal do sistema (login, cadastro)
 def menu_principal():
     while True:
         print("------ Menu Principal - PlugPilot! ------")
@@ -22,6 +25,7 @@ def menu_principal():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
+# Função para exibir o menu de cadastro, permitindo ao usuário escolher entre cadastrar como empresário ou motorista
 def cadastro_menu():
     from .service import cadastrar_usuario
     while True:
@@ -32,13 +36,9 @@ def cadastro_menu():
         print("------------------------------")
         opcao = input("Escolha uma opção: ")
         if opcao == "1":
-            print("Cadastro de Empresário selecionado.")
-            # Chama a função de cadastro para empresário
             cadastrar_usuario("empresario")
             return
         elif opcao == "2":
-            print("Cadastro de Motorista selecionado.")
-            # Chama a função de cadastro para motorista
             cadastrar_usuario("motorista")
             return
         elif opcao == "3":
@@ -47,6 +47,7 @@ def cadastro_menu():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
+# Função para exibir o menu de login, permitindo ao usuário escolher entre login como empresário ou motorista
 def login_menu():
     from .service import login
     while True:
@@ -57,13 +58,9 @@ def login_menu():
         print("---------------------------")
         opcao = input("Escolha uma opção: ")
         if opcao == "1":
-            print("Login de Empresário selecionado.")
-            # Chama a função de login para empresário
             login("empresario") 
             return 
         elif opcao == "2":      
-            print("Login de Motorista selecionado.")
-            # Chama a função de login para motorista
             login("motorista")
             return
         elif opcao == "3":
@@ -72,6 +69,7 @@ def login_menu():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
+# Função para exibir o menu do motorista, permitindo ao motorista visualizar unidades disponíveis e gerenciar reservas
 def menu_motorista():
     while True:
         print("------ Menu do Motorista ------")
@@ -83,7 +81,6 @@ def menu_motorista():
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            print("Visualizar Unidades Disponíveis selecionado.")
             unidades_disponiveis()
         elif opcao == "2":
             print("Gerenciar Reservas selecionado.")
@@ -95,6 +92,7 @@ def menu_motorista():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
+# Função para exibir o menu do empresário, permitindo ao empresário gerenciar suas unidades e dispositivos
 def menu_empresario():
     while True:
         print("------ Menu do Empresário ------")
@@ -119,9 +117,10 @@ def menu_empresario():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-unidades = dados.get("unidades")
-        
+# Função para exibir as unidades disponíveis para reserva, permitindo ao motorista escolher uma unidade e visualizar seus carregadores
 def unidades_disponiveis():
+    unidades = dados.get("unidades")
+    
     from .service import visualizar_carregadores
     print("------Estações disponiveis------")
     for i in range(len(unidades)):
