@@ -119,9 +119,10 @@ def menu_empresario():
 
 # Função para exibir as unidades disponíveis para reserva, permitindo ao motorista escolher uma unidade e visualizar seus carregadores
 def unidades_disponiveis():
+    from .service import visualizar_unidade
+    
     unidades = dados.get("unidades")
     
-    from .service import visualizar_carregadores
     print("------Estações disponiveis------")
     for i in range(len(unidades)):
         unidade_id = list(unidades.keys())[i]
@@ -138,5 +139,5 @@ def unidades_disponiveis():
 
     print("Você escolheu:", unidade_escolhida["nome_unidade"])
      
-    visualizar_carregadores()
+    visualizar_unidade(unidade_escolhida["id_unidade"])
 
