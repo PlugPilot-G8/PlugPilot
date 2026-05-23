@@ -23,6 +23,7 @@ def menu_principal():
             print("Opção inválida. Por favor, tente novamente.")
 
 def cadastro_menu():
+    from .service import cadastrar_usuario
     while True:
         print("------ Menu de Cadastro ------")
         print("1. Cadastrar Empresário")
@@ -33,9 +34,13 @@ def cadastro_menu():
         if opcao == "1":
             print("Cadastro de Empresário selecionado.")
             # Chama a função de cadastro para empresário
+            cadastrar_usuario("empresario")
+            return
         elif opcao == "2":
             print("Cadastro de Motorista selecionado.")
             # Chama a função de cadastro para motorista
+            cadastrar_usuario("motorista")
+            return
         elif opcao == "3":
             menu_principal()
             break
@@ -43,6 +48,7 @@ def cadastro_menu():
             print("Opção inválida. Por favor, tente novamente.")
 
 def login_menu():
+    from .service import login
     while True:
         print("------ Menu de Login ------")
         print("1. Login Empresário")
@@ -53,9 +59,13 @@ def login_menu():
         if opcao == "1":
             print("Login de Empresário selecionado.")
             # Chama a função de login para empresário
-        elif opcao == "2":
+            login("empresario") 
+            return 
+        elif opcao == "2":      
             print("Login de Motorista selecionado.")
             # Chama a função de login para motorista
+            login("motorista")
+            return
         elif opcao == "3":
             menu_principal()
             break
@@ -74,10 +84,11 @@ def menu_motorista():
 
         if opcao == "1":
             print("Visualizar Unidades Disponíveis selecionado.")
-            # Chama a função para visualizar unidades disponíveis
+            unidades_disponiveis()
         elif opcao == "2":
             print("Gerenciar Reservas selecionado.")
             # Chama a função para gerenciar reservas
+            return
         elif opcao == "3":
             menu_principal()
             break
@@ -97,9 +108,11 @@ def menu_empresario():
         if opcao == "1":
             print("Gerenciar Unidades selecionado.")
             # Chama a função para gerenciar unidades
+            return
         elif opcao == "2":
             print("Gerenciar Dispositivos selecionado.")
             # Chama a função para gerenciar dispositivos
+            return
         elif opcao == "3":
             menu_principal()
             break
@@ -109,6 +122,7 @@ def menu_empresario():
 unidades = dados.get("unidades")
         
 def unidades_disponiveis():
+    from .service import visualizar_carregadores
     print("------Estações disponiveis------")
     for i in range(len(unidades)):
         unidade_id = list(unidades.keys())[i]
@@ -117,11 +131,13 @@ def unidades_disponiveis():
         print(f"{i+1}.",nome)
     print("--------------------------------")
 
-    opcao = int(input("escolha oque voce deseja: "))
+    opcao = int(input("Escolha o que você deseja: "))
     
     unidade_id = list(unidades.keys())[opcao - 1]
 
     unidade_escolhida = unidades[unidade_id]
 
     print("Você escolheu:", unidade_escolhida["nome_unidade"])
-    #chamaar fubçao visualizar carregadores 
+     
+    visualizar_carregadores()
+
