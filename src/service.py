@@ -3,7 +3,9 @@
 import json
 import random
 from datetime import datetime
-from database_manager import carregar_database, atualizar_database
+from .database_manager import carregar_database, atualizar_database
+from .validator import validar_email, validar_senha, validar_cpf, validar_cnpj, validar_telefone, validar_nome
+from .app import menu_motorista, menu_empresario
 
 dados = carregar_database()
 
@@ -36,20 +38,54 @@ def buscar_cep_info(cep):
         }
     }
 usuarios = dados.get("usuarios", {})
-def cadastrar_usuario():
-
+def cadastrar_usuario(tipo_usuario):
     nome = input("Nome: ")
-    tipo_usuario = input("Tipo (motorista/empresario): ")
-    documento = input("CPF/CNPJ: ")
+    if not validar_nome(nome):
+        print("Nome inválido! Por favor, tente novamente.")
+        return
+    
     email = input("Email: ")
-    telefone = input("Telefone: ")
-    senha = input("Senha: ")
-
-    # Verificar email existente
+    if not validar_email(email):
+        print("Email inválido! Por favor, tente novamente.")
+        return
+    
     for usuario in dados["usuarios"].values():
         if usuario["email"] == email:
             print("Email já cadastrado!")
             return
+    
+    senha = input("Senha: ")
+    if not validar_senha(senha):
+        print("Senha inválida! Por favor, tente novamente.")
+        return
+    
+    telefone = input("Telefone: ")
+    if not validar_telefone(telefone):
+        print("Telefone inválido! Por favor, tente novamente.")
+        return
+    
+    if tipo_usuario == "motorista":
+        documento = input("CPF: ")
+        if not validar_cpf(documento):
+            print("CPF inválido! Por favor, tente novamente.")
+            return
+        
+    elif tipo_usuario == "empresario":
+        documento = input("CNPJ: ")
+        if not validar_cnpj(documento):
+            print("CNPJ inválido! Por favor, tente novamente.")
+            return
+        
+    senha = input("Senha: ")    
+    if not validar_senha(senha):
+        print("Senha inválida! Por favor, tente novamente.")
+        return
+        
+    telefone = input("Telefone: ")
+    if not validar_telefone(telefone):
+        print("Telefone inválido! Por favor, tente novamente.")
+        return
+
 
     id_usuario = gerar_id("usuario")
 
@@ -78,25 +114,50 @@ def atualizar_usuario(id_usuario, alteracao):
         return
 
     usuario = dados["usuarios"][id_usuario]
+    tipo_usuario = usuario["tipo_usuario"]
 
     if alteracao=="nome":
         nova_info=input("Digite o novo nome: ")
         if usuario["nome"]==nova_info:
             print("Escolha um nome diferente do atual")
             return
+        if not validar_nome(nova_info):
+            print("Nome inválido! Por favor, tente novamente.")
+            return
         usuario["nome"] = nova_info
     
     if alteracao=="documento":
-        nova_info=input("Digite um novo número de documento: ")
         if usuario["documento"]==nova_info:
             print("Escolha um número de documento diferente do atual")
             return
+        
+        if tipo_usuario=="motorista":
+            nova_info=input("CPF: ")
+            if usuario["documento"]==nova_info:
+                print("Escolha um CPF diferente do atual")
+                return 
+            if not validar_cpf(nova_info):
+                print("CPF inválido! Por favor, tente novamente.")
+                return
+            
+        if tipo_usuario=="empresario":
+            nova_info=input("CNPJ: ")
+            if usuario["documento"]==nova_info:
+                print("Escolha um CNPJ diferente do atual")
+                return
+            if not validar_cnpj(nova_info):
+                print("CNPJ inválido! Por favor, tente novamente.")
+                return
+        
         usuario["documento"]=nova_info
 
     if alteracao=="email":
         nova_info=input("Digite um novo email: ")
         if usuario["email"]==nova_info:
             print("Escolha um email diferente do atual")
+            return
+        if not validar_email(nova_info):
+            print("Email inválido! Por favor, tente novamente.")
             return
         if nova_info in [usuario.get("email") for usuario in usuarios.values()]:
                 print("Email já cadastrado para outro usuário. Por favor, verifique o email e tente novamente.")
@@ -108,12 +169,18 @@ def atualizar_usuario(id_usuario, alteracao):
         if usuario["senha"]==nova_info:
             print("Escolha uma senha diferente da atual")
             return
+        if not validar_senha(nova_info):
+            print("Senha inválida! Por favor, tente novamente.")
+            return
         usuario["senha"]=nova_info
     
     if alteracao=="telefone":
         nova_info=input("Digite um novo telefone: ")
         if usuario["telefone"]==nova_info:
             print("Escolha um telefone diferente do atual")
+            return
+        if not validar_telefone(nova_info):
+            print("Telefone inválido! Por favor, tente novamente.")
             return
         usuario["telefone"]=nova_info
 
@@ -149,19 +216,40 @@ def deletar_usuario(id_usuario):
 #LOGIN
 def login(tipo_usuario):
     email = input("Email: ")
+    if not validar_email(email):
+        print("Email inválido! Por favor, tente novamente.")
+        return
+    
     senha = input("Senha: ")
+    if not validar_senha(senha):
+        print("Senha inválida! Por favor, tente novamente.")
+        return
+    
     if tipo_usuario== "motorista":
         documento=input("Digite o seu CPF: ")
+        if not validar_cpf(documento):
+            print("CPF inválido! Por favor, tente novamente.")
+            return
+        
     elif tipo_usuario=="empresario":
-        documento=input("Digite o seu CNPJ: ")  
+        documento=input("Digite o seu CNPJ: ")
+        if not validar_cnpj(documento):
+            print("CNPJ inválido! Por favor, tente novamente.")
+            return
+    else:
+        print("Tipo de usuário inválido! Por favor, tente novamente.")
+        return
 
     for usuario in usuarios.values():
 
         if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"]==documento:
 
             print(f"\nBem-vindo {usuario['nome']}!")
-            print(f"Tipo de usuário: {usuario['tipo_usuario']}")
-            return usuario
+            if usuario["tipo_usuario"] == "motorista":
+                menu_motorista()
+            elif usuario["tipo_usuario"] == "empresario":
+                menu_empresario()
+            return
 
     print("Email ou senha incorretos!")
     return None
