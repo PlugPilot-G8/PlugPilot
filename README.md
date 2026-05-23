@@ -4,3 +4,4 @@ Equipe:
     Victor Bacelar
     Pedro Peixoto
     Lucas Soares
+    Pedro Otávio 
