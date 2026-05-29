@@ -1,5 +1,5 @@
 # app.py - Responsável por gerenciar o menu principal, login e cadastro.
-from .database_manager import carregar_database 
+from ..managers.database_manager import carregar_database 
 
 # Carrega a base de dados do sistema para ser utilizada na função de visualização de unidades
 dados = carregar_database()
@@ -27,7 +27,7 @@ def menu_principal():
 
 # Função para exibir o menu de cadastro, permitindo ao usuário escolher entre cadastrar como empresário ou motorista
 def cadastro_menu():
-    from .service import cadastrar_usuario
+    from ..services.service import cadastrar_usuario
     while True:
         print("------ Menu de Cadastro ------")
         print("1. Cadastrar Empresário")
@@ -49,7 +49,7 @@ def cadastro_menu():
 
 # Função para exibir o menu de login, permitindo ao usuário escolher entre login como empresário ou motorista
 def login_menu():
-    from .service import login
+    from ..services.service import login
     while True:
         print("------ Menu de Login ------")
         print("1. Login Empresário")
@@ -118,7 +118,7 @@ def menu_empresario():
 
 # Função para exibir as unidades disponíveis para reserva, permitindo ao motorista escolher uma unidade e visualizar seus carregadores
 def unidades_disponiveis():
-    from .service import visualizar_unidade
+    from ..services.service import visualizar_unidade
     
     unidades = dados.get("unidades")
     
@@ -141,7 +141,7 @@ def unidades_disponiveis():
     visualizar_unidade(unidade_escolhida["id_unidade"])
 
 def menu_reservas(id_motorista):
-    from .service import (
+    from ..services.service import (
         criar_reserva,
         visualizar_reserva,
         editar_reserva,
