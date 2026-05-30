@@ -110,14 +110,14 @@ python main.py
 
 ## Equipe
 
-| Nome                                    |    Função | Responsabilidades |
-| --------------------------------------- | --------: | ----------------: |
-| Antônio Marcos Soares de Araújo Filho   | preencher |         preencher |
-| Carlos Frederico Chaves Gomes Filho     | preencher |         preencher |
-| Guilherme Fonteles Matos da Silva       | preencher |         preencher |
-| Lucas Soares Pereira                    | preencher |         preencher |
-| Pedro Henrique Peixoto Campelo          | preencher |         preencher |
-| Pedro Otávio Gomes de Moura Silva       | preencher |         preencher |
-| Victor Bacelar Palazzin                 | preencher |         preencher |
+| Nome                                    |
+| --------------------------------------- | 
+| Antônio Marcos Soares de Araújo Filho   | 
+| Carlos Frederico Chaves Gomes Filho     | 
+| Guilherme Fonteles Matos da Silva       |
+| Lucas Soares Pereira                    | 
+| Pedro Henrique Peixoto Campelo          | 
+| Pedro Otávio Gomes de Moura Silva       | 
+| Victor Bacelar Palazzin                 | 
 
 ---
