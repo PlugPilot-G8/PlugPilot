@@ -1,10 +1,11 @@
 # app.py - Responsável por gerenciar o menu principal, login e cadastro.
-from .database_manager import carregar_database 
-
-# Carrega a base de dados do sistema para ser utilizada na função de visualização de unidades
+from .database_manager import carregar_database
+from .service import dashboard_empresario, horarios_de_pico
 dados = carregar_database()
 
 # Função para exibir o menu principal do sistema (login, cadastro)
+
+
 def menu_principal():
     while True:
         print("------ Menu Principal - PlugPilot! ------")
@@ -26,6 +27,8 @@ def menu_principal():
             print("Opção inválida. Por favor, tente novamente.")
 
 # Função para exibir o menu de cadastro, permitindo ao usuário escolher entre cadastrar como empresário ou motorista
+
+
 def cadastro_menu():
     from .service import cadastrar_usuario
     while True:
@@ -48,6 +51,8 @@ def cadastro_menu():
             print("Opção inválida. Por favor, tente novamente.")
 
 # Função para exibir o menu de login, permitindo ao usuário escolher entre login como empresário ou motorista
+
+
 def login_menu():
     from .service import login
     while True:
@@ -58,9 +63,9 @@ def login_menu():
         print("---------------------------")
         opcao = input("Escolha uma opção: ")
         if opcao == "1":
-            login("empresario") 
-            return 
-        elif opcao == "2":      
+            login("empresario")
+            return
+        elif opcao == "2":
             login("motorista")
             return
         elif opcao == "3":
@@ -70,6 +75,8 @@ def login_menu():
             print("Opção inválida. Por favor, tente novamente.")
 
 # Função para exibir o menu do motorista, permitindo ao motorista visualizar unidades disponíveis e gerenciar reservas
+
+
 def menu_motorista():
     while True:
         print("------ Menu do Motorista ------")
@@ -92,13 +99,36 @@ def menu_motorista():
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
+def menu_dashboard_empresario():
+    while True:
+        print("------ Dashboard do Empresário ------")
+        print("1. Taxa de Ocupação Semanal")
+        print("2. Horários de Pico")
+        print("3. Voltar")
+        print("-------------------------------------")
+
+        opcao = input("Escolha uma opção: ")
+
+        if opcao == "1":
+            print("Exibindo Taxa de Uso Semanal...")
+            dashboard_empresario()
+        elif opcao == "2":
+            print("Exibindo Horários de Pico...")
+            horarios_de_pico()
+        elif opcao == "3":
+            return
+        else:
+            print("Opção inválida. Por favor, tente novamente.")
+
 # Função para exibir o menu do empresário, permitindo ao empresário gerenciar suas unidades e dispositivos
+
 def menu_empresario():
     while True:
         print("------ Menu do Empresário ------")
         print("1. Gerenciar Unidades")
         print("2. Gerenciar Dispositivos")
-        print("3. Sair")
+        print("3. Ver Dashboard")
+        print("4. Sair")
         print("-------------------------------")
 
         opcao = input("Escolha uma opção: ")
@@ -112,32 +142,35 @@ def menu_empresario():
             # Chama a função para gerenciar dispositivos
             return
         elif opcao == "3":
+            menu_dashboard_empresario()
+        elif opcao == "4":
             menu_principal()
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
 # Função para exibir as unidades disponíveis para reserva, permitindo ao motorista escolher uma unidade e visualizar seus carregadores
+
+
 def unidades_disponiveis():
     from .service import visualizar_unidade
-    
+
     unidades = dados.get("unidades")
-    
+
     print("------Estações disponiveis------")
     for i in range(len(unidades)):
         unidade_id = list(unidades.keys())[i]
         unidade = unidades.get(unidade_id)
         nome = unidade.get("nome_unidade")
-        print(f"{i+1}.",nome)
+        print(f"{i+1}.", nome)
     print("--------------------------------")
 
     opcao = int(input("Escolha o que você deseja: "))
-    
+
     unidade_id = list(unidades.keys())[opcao - 1]
 
     unidade_escolhida = unidades[unidade_id]
 
     print("Você escolheu:", unidade_escolhida["nome_unidade"])
-     
-    visualizar_unidade(unidade_escolhida["id_unidade"])
 
+    visualizar_unidade(unidade_escolhida["id_unidade"])

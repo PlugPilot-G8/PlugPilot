@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 from .database_manager import carregar_database, atualizar_database
 from .validator import validar_email, validar_senha, validar_cpf, validar_cnpj, validar_telefone, validar_nome
-from .app import menu_motorista, menu_empresario
+from .app1 import menu_motorista, menu_empresario
 
 # Carrega os dados do banco de dados
 dados = carregar_database()
