@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from .database_manager import carregar_database
+from ..managers.database_manager import carregar_database
 
 def dashboard_empresario():
     

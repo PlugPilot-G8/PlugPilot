@@ -1,12 +1,10 @@
-# app.py - Responsável por gerenciar o menu principal, login e cadastro.
-<<<<<<<< HEAD:src/app1.py
-from .database_manager import carregar_database
-from .service import dashboard_empresario, horarios_de_pico
-========
+# terminal_ui.py - Responsável por gerenciar o menu principal, login e cadastro.
+from ..managers.database_manager import carregar_database
+from ..services.dashboard import dashboard_empresario, horarios_de_pico
+
 from ..managers.database_manager import carregar_database 
 
 # Carrega a base de dados do sistema para ser utilizada na função de visualização de unidades
->>>>>>>> origin/main:src/ui/terminal_ui.py
 dados = carregar_database()
 
 # Função para exibir o menu principal do sistema (login, cadastro)
@@ -60,7 +58,7 @@ def cadastro_menu():
 
 
 def login_menu():
-    from ..services.service import login
+    from ..services.authenticator_service import login
     while True:
         print("------ Menu de Login ------")
         print("1. Login Empresário")
@@ -81,7 +79,6 @@ def login_menu():
             print("Opção inválida. Por favor, tente novamente.")
 
 # Função para exibir o menu do motorista, permitindo ao motorista visualizar unidades disponíveis e gerenciar reservas
-
 
 def menu_motorista():
     while True:
@@ -156,15 +153,9 @@ def menu_empresario():
 
 # Função para exibir as unidades disponíveis para reserva, permitindo ao motorista escolher uma unidade e visualizar seus carregadores
 
-
 def unidades_disponiveis():
-<<<<<<<< HEAD:src/app1.py
-    from .service import visualizar_unidade
-
-========
-    from ..services.service import visualizar_unidade
+    from ..managers.unit_manager import visualizar_unidade
     
->>>>>>>> origin/main:src/ui/terminal_ui.py
     unidades = dados.get("unidades")
 
     print("------Estações disponiveis------")
@@ -183,11 +174,10 @@ def unidades_disponiveis():
 
     print("Você escolheu:", unidade_escolhida["nome_unidade"])
 
-<<<<<<<< HEAD:src/app1.py
     visualizar_unidade(unidade_escolhida["id_unidade"])
-========
+
 def menu_reservas(id_motorista):
-    from ..services.service import (
+    from ..managers.reserve_manager import (
         criar_reserva,
         visualizar_reserva,
         editar_reserva,
@@ -246,4 +236,3 @@ def menu_reservas(id_motorista):
 
         else:
             print("Opção inválida.")
->>>>>>>> origin/main:src/ui/terminal_ui.py
