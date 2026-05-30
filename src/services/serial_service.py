@@ -1,0 +1,1 @@
+# serial_service.py - Leitura da comunicação serial do Arduino e atualização dos carregadores

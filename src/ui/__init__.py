@@ -1,0 +1,1 @@
+# init.py - Marca a pasta como um pacote Python
