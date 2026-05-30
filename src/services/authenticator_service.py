@@ -53,6 +53,7 @@ def login(tipo_usuario):
             elif usuario["tipo_usuario"] == "empresario":
                 input("Pressione ENTER para continuar...")
                 menu_empresario()
-        print(f"Login Inválido! Por favor, tente novamente.")
+        else:
+            print(f"Login Inválido! Por favor, tente novamente.")
     input("Pressione ENTER para continuar...")
     return None

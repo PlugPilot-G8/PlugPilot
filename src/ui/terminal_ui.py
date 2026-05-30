@@ -34,7 +34,7 @@ def menu_principal():
 
 
 def cadastro_menu():
-    from ..services.service import cadastrar_usuario
+    from ..managers.user_manager import cadastrar_usuario
     while True:
         print("------ Menu de Cadastro ------")
         print("1. Cadastrar Empresário")
