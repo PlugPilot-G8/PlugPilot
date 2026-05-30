@@ -93,7 +93,8 @@ def menu_motorista():
         if opcao == "1":
             unidades_disponiveis()
         elif opcao == "2":
-            menu_reservas()
+            id_usuario = input("Digite o ID do motorista: ")
+            menu_reservas(id_usuario)
         elif opcao == "3":
             menu_principal()
             break
