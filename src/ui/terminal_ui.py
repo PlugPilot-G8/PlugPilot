@@ -1,6 +1,6 @@
 # terminal_ui.py - Responsável por gerenciar o menu principal, login e cadastro.
 from ..managers.database_manager import carregar_database
-from ..services.dashboard import dashboard_empresario, horarios_de_pico
+from ..services.dashboard import dashboard_empresario, horarios_de_pico, unidades_ativas
 
 from ..managers.database_manager import carregar_database 
 
@@ -93,17 +93,23 @@ def menu_motorista():
         if opcao == "1":
             unidades_disponiveis()
         elif opcao == "2":
-            id_motorista = input("Digite seu ID de motorista: ")
-            menu_reservas(id_motorista)
+            menu_reservas()
         elif opcao == "3":
             menu_principal()
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-def menu_dashboard_empresario():
+def menu_dashboard_empresario(id_usuario):
+    from ..services.dashboard import  unidades_ativas, relatorio_carregadores,reservas_hoje,receita_estimada_mes
+
+    
     while True:
         print("------ Dashboard do Empresário ------")
+        print(f"Unidades ativas: {unidades_ativas(id_usuario)}")
+        relatorio_carregadores(id_usuario)
+        print(f"Reservas hoje: {reservas_hoje()}")
+        print(f"Receita estimada: R$ {receita_estimada_mes(id_usuario):.2f}")
         print("1. Taxa de Ocupação Semanal")
         print("2. Horários de Pico")
         print("3. Voltar")
@@ -144,7 +150,8 @@ def menu_empresario():
             # Chama a função para gerenciar dispositivos
             return
         elif opcao == "3":
-            menu_dashboard_empresario()
+            id_usuario = input("Digite o ID do empresário: ")
+            menu_dashboard_empresario(id_usuario)
         elif opcao == "4":
             menu_principal()
             break

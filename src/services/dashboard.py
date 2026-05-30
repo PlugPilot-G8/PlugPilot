@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from ..managers.database_manager import carregar_database
+from datetime import datetime
 
 def dashboard_empresario():
     
@@ -56,3 +57,115 @@ def horarios_de_pico():
     plt.tight_layout()
 
     plt.show()
+
+def total_carregadores(id_usuario):
+    dados = carregar_database()
+    unidades = dados.get("unidades", {})
+    carregadores = dados.get("carregadores", {})
+
+    ids_unidades = [
+        unidade["id_unidade"]
+        for unidade in unidades.values()
+        if unidade["id_dono"] == id_usuario
+    ]
+
+    total = sum(
+        1
+        for carregador in carregadores.values()
+        if carregador["id_unidade"] in ids_unidades
+    )
+
+    return total
+
+def relatorio_carregadores(id_usuario):
+    dados = carregar_database()
+    unidades = dados.get("unidades", {})
+    carregadores = dados.get("carregadores", {})
+
+    ids_unidades = [
+        unidade["id_unidade"]
+        for unidade in unidades.values()
+        if unidade["id_dono"] == id_usuario
+    ]
+
+    total = 0
+    disponiveis = 0
+    ocupados = 0
+    offline = 0
+    manutencao = 0
+
+    for carregador in carregadores.values():
+        if carregador["id_unidade"] in ids_unidades:
+            total += 1
+            status = carregador["status_atual"].lower()
+            if status == "disponivel":
+                disponiveis += 1
+            elif status == "ocupado":
+                ocupados += 1
+            elif status == "offline":
+                offline += 1
+            elif status == "manutencao":
+                manutencao += 1
+
+    print(f"Total de carregadores: {total}")
+    print(f"Disponíveis: {disponiveis}")
+    print(f"Ocupados: {ocupados}")
+    print(f"Offline: {offline}")
+    print(f"Em manutenção: {manutencao}")
+
+    return {
+        "total": total,
+        "disponiveis": disponiveis,
+        "ocupados": ocupados,
+        "offline": offline,
+        "manutencao": manutencao
+    }
+
+def reservas_hoje():
+    dados = carregar_database()
+    reservas = dados.get("reservas", {})
+    hoje = datetime.now().date()
+    total = 0
+
+    for reserva in reservas.values():
+
+        data_reserva = datetime.strptime(
+            reserva["agendado_para"],
+            "%Y-%m-%dT%H:%M:%SZ"
+        ).date()
+
+        if data_reserva == hoje:
+            total += 1
+
+    return total
+
+def unidades_ativas(id_usuario):
+    dados = carregar_database()
+    unidades = dados.get("unidades", {})
+    total = 0
+    for unidade in unidades.values():
+        if (
+            unidade["id_dono"] == id_usuario
+            and unidade.get("status", "").lower() == "ativa"
+        ):
+            total += 1
+
+    return total 
+
+def receita_estimada_mes(id_usuario):
+    dados = carregar_database()
+    reservas = dados.get("reservas", {})
+    unidades = dados.get("unidades", {})
+    total_receita = 0.0
+
+    ids_unidades = [
+        unidade["id_unidade"]
+        for unidade in unidades.values()
+        if unidade["id_dono"] == id_usuario
+    ]
+
+    for reserva in reservas.values():
+        if reserva["id_unidade"] in ids_unidades:
+            total_receita += reserva.get("valor_estimado", 0.0)
+
+    return total_receita       

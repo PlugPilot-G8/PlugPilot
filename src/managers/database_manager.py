@@ -14,7 +14,8 @@ def criar_database():
                 "email": "empresa@gmail.com",
                 "senha": "empresa123",
                 "telefone": "+5511999998888",
-                "data_cadastro": "2026-01-15T10:30:00Z"
+                "data_cadastro": "2026-01-15T10:30:00Z",
+               
             },
             "usr_002": {
                 "id_usuario": "usr_002",
@@ -35,6 +36,7 @@ def criar_database():
             "und_001": {
                 "id_unidade": "und_001",
                 "id_dono": "usr_001",
+                "status": "Ativa",
                 "nome_unidade": "PlugPilot Station - Jardins",
                 "endereco_formatado": "Alameda Lorena, 1234 - Jardins, São Paulo - SP, 01424-001",
                 "coordenadas": {
