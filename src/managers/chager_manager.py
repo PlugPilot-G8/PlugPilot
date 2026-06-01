@@ -2,7 +2,14 @@
 from .database_manager import carregar_database, atualizar_database
 from ..services.service import gerar_id
 
+salvar_database = atualizar_database
+
 dados = carregar_database()
+
+STATUS_ARDUINO_PARA_SISTEMA = {
+    "IN_USE": "Ocupado",
+    "FREE": "Disponivel"
+}
 
 # Carregadores
 carregadores = dados.get("carregadores", {})
@@ -174,7 +181,7 @@ def editar_carregador(id_carregador, alteracao):
     else:
         print("Carregador não encontrado.")
 
-# Função para deletar um carregador do sistema, verificando se o ID do carregador existe no banco de dados antes de realizar a exclusão
+# Função para deletar um carregador do sistema
 def deletar_carregador(id_carregador):
     carregador = dados.get("carregadores", {}).get(id_carregador)
 
@@ -184,3 +191,28 @@ def deletar_carregador(id_carregador):
         print(f"Carregador {id_carregador} foi deletado!")
     else:
         print("Carregador não encontrado.")
+
+# Função para atualizar o status do carregador
+def atualizar_status_por_hardware(id_hardware, status_arduino):
+    dados = carregar_database()
+
+    novo_status = STATUS_ARDUINO_PARA_SISTEMA.get(status_arduino)
+
+    if novo_status is None:
+        print(f"[CHARGER_MANAGER] Status inválido: {status_arduino}")
+        return False
+
+    for id_carregador, carregador in dados.get("carregadores", {}).items():
+        if carregador.get("id_hardware") == id_hardware:
+            carregador["status_atual"] = novo_status
+            salvar_database(dados)
+
+            print(
+                f"[CHARGER_MANAGER] Hardware {id_hardware} atualizou "
+                f"{id_carregador} para {novo_status}"
+            )
+
+            return True
+
+    print(f"[CHARGER_MANAGER] Nenhum carregador vinculado ao hardware {id_hardware}")
+    return False

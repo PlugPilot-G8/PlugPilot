@@ -63,6 +63,11 @@ def criar_database():
                 "tipo_conector": "Tipo 2 (Europeu)",
                 "preco_por_kwh": 2.49,
                 "status_atual": "Disponivel",
+                "tipo_monitoramento": "hardware",
+                "id_hardware": "hw_001",
+                #em carregadores sem Pilotflow
+                #"tipo_monitoramento": "manual",
+                #"id_hardware": null
                 "ultima_manutencao": "2026-04-01",
                 "recursos": {
                     "permite_reserva": True,

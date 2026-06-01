@@ -29,19 +29,19 @@ void setColor(int r, int g, int b) {
 
 void loop() {
 
-  bool emUso = digitalRead(BUTTON_PIN) == LOW;
+  bool emUso = digitalRead(BUTTON_PIN);
 
   if (emUso != ultimoEstado) {
 
     if (emUso) {
 
-      Serial.println("CHARGER:1:IN_USE");
+      Serial.println("HARDWARE:hw_001:IN_USE");
 
       setColor(255, 0, 0);
 
     } else {
 
-      Serial.println("CHARGER:1:FREE");
+      Serial.println("HARDWARE:hw_001:FREE");
 
       setColor(0, 255, 0);
     }
