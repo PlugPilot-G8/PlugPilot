@@ -2,6 +2,8 @@
 
 import json
 
+data = "src/data/database.json"
+
 # Função para criar a base de dados inicial do sistema, com dados de exemplo para usuários, unidades, carregadores e reservas
 def criar_database():
     dados = {
@@ -65,9 +67,25 @@ def criar_database():
                 "status_atual": "Disponivel",
                 "tipo_monitoramento": "hardware",
                 "id_hardware": "hw_001",
-                #em carregadores sem Pilotflow
-                #"tipo_monitoramento": "manual",
-                #"id_hardware": null
+                "ultima_manutencao": "2026-04-01",
+                "recursos": {
+                    "permite_reserva": True,
+                    "fila_virtual": True,
+                    "plug_and_charge": False
+                }
+            }, 
+            "chg_002": {
+                "id_carregador": "chg_002",
+                "id_unidade": "und_001",
+                "modelo": "Volvo Wallbox Plus",
+                "fabricante": "Volvo",
+                "tipo_corrente": "AC",
+                "potencia_kw": 22.0,
+                "tipo_conector": "Tipo 2 (Europeu)",
+                "preco_por_kwh": 2.49,
+                "status_atual": "Disponivel",
+                "tipo_monitoramento": "manual",
+                "id_hardware": None,
                 "ultima_manutencao": "2026-04-01",
                 "recursos": {
                     "permite_reserva": True,
@@ -92,7 +110,7 @@ def criar_database():
         }
     }
 
-    with open("banco.json", "w", encoding="utf-8") as arquivo:
+    with open(data, "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, indent=4, ensure_ascii=False)
 
     print("Banco inicial criado com sucesso!")
@@ -100,7 +118,7 @@ def criar_database():
 # Função para carregar o banco de dados do sistema, criando um novo banco caso o arquivo não exista ou esteja corrompido
 def carregar_database():
     try:
-        with open("banco.json", "r", encoding="utf-8") as arquivo:
+        with open(data, "r", encoding="utf-8") as arquivo:
             dados = json.load(arquivo)
         return dados
     except FileNotFoundError:
@@ -114,5 +132,5 @@ def carregar_database():
 
 # Função para atualizar o banco de dados com as alterações realizadas no sistema
 def atualizar_database(dados):
-    with open("banco.json", "w", encoding="utf-8") as arquivo:
+    with open(data, "w", encoding="utf-8") as arquivo:
         json.dump(dados, arquivo, indent=4, ensure_ascii=False)
