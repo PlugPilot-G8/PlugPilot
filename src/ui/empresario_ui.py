@@ -1,5 +1,7 @@
 from .geral_ui import menu_principal
 from ..services.dashboard import dashboard_empresario, horarios_de_pico
+from ..managers.unit_manager import listar_unidades, cadastrar_unidade, deletar_unidade 
+from ..managers.chager_manager import listar_carregadores, cadastrar_carregador, deletar_carregador
 
 
 def menu_empresario():
@@ -15,10 +17,10 @@ def menu_empresario():
 
         if opcao == "1":
             print("Gerenciar Unidades selecionado.")
-            return
+            gerenciar_unidades()
         elif opcao == "2":
             print("Gerenciar Dispositivos selecionado.")
-            return
+            gerenciar_dispositivos()
         elif opcao == "3":
             id_usuario = input("Digite o ID do empresário: ")
             menu_dashboard_empresario(id_usuario)
@@ -55,3 +57,63 @@ def menu_dashboard_empresario(id_usuario):
             return
         else:
             print("Opção inválida. Por favor, tente novamente.")
+
+def gerenciar_unidades(): 
+    print("Gerenciar Unidades selecionado.")
+    
+    while True:
+        print("------ Gerenciar Unidades ------")
+        print("1. Listar Unidades")
+        print("2. Cadastrar Unidade")
+        print("3. Deletar Unidade")
+        print("4. Voltar")
+        print("--------------------------------")
+
+        op = input("Escolha uma opção: ")
+        try:
+            if op == "1":
+                listar_unidades()
+            elif op == "2":
+                cadastrar_unidade()
+            elif op == "3":
+                deletar_unidade()
+            elif op == "4":
+                return
+            else:
+                print("Opção inválida. Por favor, tente novamente.")
+        except Exception as erro:
+            print(f"Aconteceu um erro inesperado: {erro}")
+        input("Aperte Enter para continuar: ")
+    
+
+def gerenciar_dispositivos():
+    print("Gerenciar Dispositivos selecionado.")
+    
+    while True:
+        if not listar_carregadores():
+            print("Nenhum carregador cadastrado. Por favor, cadastre um carregador primeiro.")
+            cadastrar_carregador()
+            continue
+        print("------ Gerenciar Dispositivos ------")
+        print("1. Listar Dispositivos") 
+        print("2. Cadastrar Dispositivo")
+        print("3. Deletar Dispositivo")
+        print("4. Voltar")
+        print("-----------------------------------")
+        
+        op = input("Escolha uma opção: ")
+        
+        try:
+            if op == "1":
+                listar_carregadores()
+            elif op == "2":
+                cadastrar_carregador()
+            elif op == "3":
+                deletar_carregador()
+            elif op == "4":
+                return
+            else:
+                print("Opção inválida. Por favor, tente novamente.")
+        except Exception as erro:
+            print(f"Aconteceu um erro inesperado: {erro}")
+        input("Aperte Enter para continuar: ")
