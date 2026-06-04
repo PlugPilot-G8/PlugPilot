@@ -1,12 +1,14 @@
 #authenticator.py - Responsável por fornecer funções de autenticação para o sistema, como login, logout, verificação de sessão, etc.
 from ..validators.validator import validar_email, validar_cpf, validar_cnpj, validar_senha
 from ..managers.database_manager import carregar_database
-from ..ui.terminal_ui import menu_motorista, menu_empresario
 
 dados = carregar_database()
 
 # Função para realizar o login de um usuário
 def login(tipo_usuario):
+    from ..ui.empresario_ui import menu_empresario
+    from ..ui.motorista_ui import menu_motorista
+    
     usuarios = dados.get("usuarios", {})
     # Recebe e valida as informações do usuário
     while True:
@@ -49,10 +51,10 @@ def login(tipo_usuario):
             print(f"\nBem-vindo {usuario['nome']}!")
             if usuario["tipo_usuario"] == "motorista":
                 input("Pressione ENTER para continuar...")
-                menu_motorista()
+                menu_motorista(usuario["id_usuario"])
             elif usuario["tipo_usuario"] == "empresario":
                 input("Pressione ENTER para continuar...")
-                menu_empresario()
+                menu_empresario(usuario["id_usuario"])
         else:
             print(f"Login Inválido! Por favor, tente novamente.")
     input("Pressione ENTER para continuar...")

@@ -15,13 +15,10 @@ def menu_principal():
         opcao = input("Escolha uma opção: ")
         
         if opcao == "1":
-            print("Opção de Login selecionada.")
             login_menu()
         elif opcao == "2":
-            print("Opção de Cadastro selecionada.")
             cadastro_menu()
         elif opcao == "3":
-            print("Saindo do sistema. Até logo!")
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")

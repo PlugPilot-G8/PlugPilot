@@ -6,7 +6,7 @@ from ..services.service import gerar_id, buscar_cep_info
 dados =  carregar_database()
 
 # Função para criar uma nova unidade
-def criar_unidade(id_dono):
+def cadastrar_unidade(id_dono):
     unidades = dados.get("unidades", {})
 
     # Recebe e valida as informações da unidade
@@ -64,8 +64,8 @@ def criar_unidade(id_dono):
     print(f"Unidade {id_unidade} criada com sucesso.")
 
 # Função para visualizar as informações de uma unidade específica
-def visualizar_unidade(id_unidade):
-    from .chager_manager import visualizar_carregador
+def listar_unidade(id_unidade):
+    from .chager_manager import listar_carregador, gerenciar_carregadores
 
     unidades = dados.get("unidades", {})
     carregadores = dados.get("carregadores", {})
@@ -89,14 +89,58 @@ def visualizar_unidade(id_unidade):
         for carregador in carregadores.values():
             if carregador["id_unidade"] == id_unidade:
                 encontrou_carregador = True
-                visualizar_carregador(carregador["id_carregador"])
+                listar_carregador(carregador["id_carregador"])
 
         if not encontrou_carregador:
             print("Nenhum carregador cadastrado nessa unidade.")
 
-        print(f"--------------------------------------------------------------------")
+        print(f"------------------------------ Gerenciar Unidade --------------------------------------")
+        while True:
+            print("\nO que deseja fazer?")
+            print("\n1. Editar Unidade")
+            print("2. Deletar Unidade")
+            print("3. Gerenciar Carregadores")
+            print("4. Voltar")
+
+            opcao = input("Escolha uma opção: ")
+
+            if opcao == "1":
+                print("\nO que deseja alterar?")
+                print("1. Nome da Unidade")
+                print("2. CEP")
+                print("3. Horário de Funcionamento")
+
+                opcao = input("Escolha uma opção: ")
+
+                if opcao == "1":
+                    editar_unidade(id_unidade, "nome_unidade")
+                elif opcao  == "2":
+                    editar_unidade(id_unidade, "CEP")
+                elif opcao == "3":
+                    editar_unidade(id_unidade, "horario_funcionamento")
+                else:
+                    print("Opção inválida.")
+            elif opcao == "2":
+                deletar_unidade(id_unidade)
+                break
+            elif opcao == "3":
+                gerenciar_carregadores(id_unidade)
+            elif opcao == "4":
+                break
+            else:
+                print("Opção inválida.")
     else:
         print("Unidade não encontrada.")
+
+def listar_unidades(id_usuario):
+    unidades = dados.get("unidades", {})
+    unidades_usuario = [unidade for unidade in unidades.values() if unidade["id_dono"] == id_usuario]
+
+    if unidades_usuario:
+        for i, unidade in enumerate(unidades_usuario, start=1):
+            print(f"{i}. {unidade['nome_unidade']}")
+    else:
+        print("Nenhuma unidade cadastrada por você.")
 
 # Função para editar as informações de uma unidade existente
 def editar_unidade(id_unidade, alteracao):
