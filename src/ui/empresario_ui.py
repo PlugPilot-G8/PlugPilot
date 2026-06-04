@@ -18,6 +18,7 @@ def menu_empresario(id_usuario):
 
         if opcao == "1":
             gerenciar_unidades(id_usuario)
+            gerenciar_unidades(id_usuario)
         elif opcao == "2":
             menu_dashboard_empresario(id_usuario)
         elif opcao == "3":
