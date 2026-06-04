@@ -5,11 +5,10 @@ import threading
 from src.managers.database_manager import carregar_database
 from src.managers.chager_manager import atualizar_status_por_hardware
 from src.services.serial_service import SerialService
-from src.ui.terminal_ui import menu_principal
+from src.ui.geral_ui import menu_principal
 
 PORTA_ARDUINO = "COM10"
 BAUD_RATE = 9600
-
 
 if __name__ == "__main__":
     print("[MAIN] Inicializando Sistema...")

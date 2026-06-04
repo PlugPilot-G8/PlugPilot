@@ -1,38 +1,44 @@
 from .geral_ui import menu_principal
-from ..services.dashboard import dashboard_empresario, horarios_de_pico
-from ..managers.unit_manager import listar_unidades, cadastrar_unidade, deletar_unidade 
-from ..managers.chager_manager import listar_carregadores, cadastrar_carregador, deletar_carregador
 
-
-def menu_empresario():
+def menu_empresario(id_usuario):
+    if not id_usuario:
+        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        menu_principal()
+        return
+    
     while True:
+        
         print("------ Menu do Empresário ------")
         print("1. Gerenciar Unidades")
-        print("2. Gerenciar Dispositivos")
-        print("3. Ver Dashboard")
-        print("4. Sair")
+        print("2. Ver Dashboard")
+        print("3. Sair")
         print("-------------------------------")
 
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            print("Gerenciar Unidades selecionado.")
-            gerenciar_unidades()
+            gerenciar_unidades(id_usuario)
         elif opcao == "2":
-            print("Gerenciar Dispositivos selecionado.")
-            gerenciar_dispositivos()
-        elif opcao == "3":
-            id_usuario = input("Digite o ID do empresário: ")
             menu_dashboard_empresario(id_usuario)
-        elif opcao == "4":
+        elif opcao == "3":
             menu_principal()
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
 def menu_dashboard_empresario(id_usuario):
-    from ..services.dashboard import  unidades_ativas, relatorio_carregadores,reservas_hoje,receita_estimada_mes
-
+    from ..services.dashboard import (
+        dashboard_empresario, 
+        horarios_de_pico, 
+        unidades_ativas, 
+        relatorio_carregadores, 
+        reservas_hoje,
+        receita_estimada_mes)
+    
+    if not id_usuario:
+        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        menu_principal()
+        return
     
     while True:
         print("------ Dashboard do Empresário ------")
@@ -58,62 +64,49 @@ def menu_dashboard_empresario(id_usuario):
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-def gerenciar_unidades(): 
-    print("Gerenciar Unidades selecionado.")
+def gerenciar_unidades(id_usuario): 
+    from ..managers.database_manager import carregar_database
+    from ..managers.unit_manager import (
+        cadastrar_unidade, 
+        editar_unidade, 
+        listar_unidades, 
+        deletar_unidade,
+        listar_unidade)
+    
+    if not id_usuario:
+        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        menu_principal()
+        return
+    
+    dados = carregar_database()
     
     while True:
-        print("------ Gerenciar Unidades ------")
-        print("1. Listar Unidades")
+        print("------ Suas Unidades ------")
+        listar_unidades(id_usuario)
+        print("--------------------------------")
+        print("1. Visualizar Unidade")
         print("2. Cadastrar Unidade")
-        print("3. Deletar Unidade")
-        print("4. Voltar")
+        print("3. Voltar")
         print("--------------------------------")
 
-        op = input("Escolha uma opção: ")
+        opcao = input("Escolha uma opção: ")
+        
         try:
-            if op == "1":
-                listar_unidades()
-            elif op == "2":
-                cadastrar_unidade()
-            elif op == "3":
-                deletar_unidade()
-            elif op == "4":
-                return
-            else:
-                print("Opção inválida. Por favor, tente novamente.")
-        except Exception as erro:
-            print(f"Aconteceu um erro inesperado: {erro}")
-        input("Aperte Enter para continuar: ")
-    
+            if opcao == "1":
+                unidades = dados.get("unidades", {})
 
-def gerenciar_dispositivos():
-    print("Gerenciar Dispositivos selecionado.")
-    
-    while True:
-        if not listar_carregadores():
-            print("Nenhum carregador cadastrado. Por favor, cadastre um carregador primeiro.")
-            cadastrar_carregador()
-            continue
-        print("------ Gerenciar Dispositivos ------")
-        print("1. Listar Dispositivos") 
-        print("2. Cadastrar Dispositivo")
-        print("3. Deletar Dispositivo")
-        print("4. Voltar")
-        print("-----------------------------------")
-        
-        op = input("Escolha uma opção: ")
-        
-        try:
-            if op == "1":
-                listar_carregadores()
-            elif op == "2":
-                cadastrar_carregador()
-            elif op == "3":
-                deletar_carregador()
-            elif op == "4":
+                nome_unidade = input("Unidade que deseja visualizar: ")
+                
+                id_unidade = next((id for id, unidade in unidades.items() if unidade["nome_unidade"] == nome_unidade), None)
+                if id_unidade:
+                    listar_unidade(id_unidade)
+                else:
+                    print("Unidade não encontrada.")
+            elif opcao == "2":
+                cadastrar_unidade(id_usuario)
+            elif opcao == "3":
                 return
             else:
                 print("Opção inválida. Por favor, tente novamente.")
         except Exception as erro:
             print(f"Aconteceu um erro inesperado: {erro}")
-        input("Aperte Enter para continuar: ")
