@@ -5,6 +5,7 @@ import threading
 from src.managers.database_manager import carregar_database
 from src.managers.chager_manager import atualizar_status_por_hardware
 from src.services.serial_service import SerialService
+from src.services.service import obter_localizacao_usuario
 from src.ui.geral_ui import menu_principal
 
 PORTA_ARDUINO = "COM10"

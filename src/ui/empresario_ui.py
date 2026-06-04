@@ -99,7 +99,7 @@ def gerenciar_unidades(id_usuario):
                 
                 id_unidade = next((id for id, unidade in unidades.items() if unidade["nome_unidade"] == nome_unidade), None)
                 if id_unidade:
-                    listar_unidade(id_unidade)
+                    listar_unidade(id_usuario, id_unidade)
                 else:
                     print("Unidade não encontrada.")
             elif opcao == "2":

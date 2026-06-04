@@ -17,6 +17,10 @@ def criar_database():
                 "senha": "empresa123",
                 "telefone": "+5511999998888",
                 "data_cadastro": "2026-01-15T10:30:00Z",
+                "coordenadas_atual": {
+                    "latitude": -23.561684,
+                    "longitude": -46.662083
+                },
                
             },
             "usr_002": {
@@ -25,9 +29,13 @@ def criar_database():
                 "tipo_usuario": "motorista",
                 "documento": "123.456.789-00",
                 "email": "user@gmail.com",
-                "senha": "user123",
+                "senha": "user1234",
                 "telefone": "+5511988887777",
                 "data_cadastro": "2026-02-10T14:22:00Z",
+                "coordenadas_atual": {
+                    "latitude": -23.561684,
+                    "longitude": -46.662083
+                },
                 "historico_reservas": [
                     "res_901"
                 ]

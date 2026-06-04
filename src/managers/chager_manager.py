@@ -66,22 +66,17 @@ def cadastrar_carregador(id_unidade):
     atualizar_database(dados)
     print(f"Carregador {id_carregador} criado com sucesso.")
 
-# Função para visualizar as informações de um carregador específico
-def listar_carregador(id_carregador):
+def visualizar_carregador(id_usuario, id_carregador):
+    from ..managers.reserve_manager import reservar_carregador
+    
     carregador = dados.get("carregadores", {}).get(id_carregador)
+    usuario = dados.get("usuarios", {}).get(id_usuario)
 
     if carregador:
-        print(f"Carregador: {carregador['modelo'][:20]} - {carregador['fabricante']}")
-    else:
-        print("Carregador não encontrado.")
-
-def visualizar_carregador(id_carregador):
-    carregador = dados.get("carregadores", {}).get(id_carregador)
-
-    if carregador:
+        tipo_usuario = usuario.get("tipo_usuario")
+        
         while True:
             print(f"\n------ Informações do {carregador['modelo']} ------")
-            print(f"ID: {carregador['id_carregador']}")
             print(f"Modelo: {carregador['modelo']}")
             print(f"Fabricante: {carregador['fabricante']}")
             print(f"Tipo de Corrente: {carregador['tipo_corrente']}")
@@ -91,66 +86,93 @@ def visualizar_carregador(id_carregador):
             print(f"Status Atual: {carregador['status_atual']}")
             print(f"Última Manutenção: {carregador['ultima_manutencao']}")
             print("Recursos:")
-            for recurso, valor in carregador["recursos"].items():
-                print(f"  - {recurso}: {'Sim' if valor else 'Não'}")
-            print("---------------------------------------------")
-            print("1. Editar Carregador")
-            print("2. Deletar Carregador")
-            print("3. Voltar")
-            opcao = input("Escolha uma opção: ")
+            if tipo_usuario == "empresario":
+                for recurso, valor in carregador["recursos"].items():
+                    print(f"  - {recurso}: {'Sim' if valor else 'Não'}")
+                
+            if usuario["tipo_usuario"] == "empresario":
+                print("---------------------------------------------")
+                print("1. Editar Carregador")
+                print("2. Deletar Carregador")
+                print("3. Voltar")
+                opcao = input("Escolha uma opção: ")
+                
+                if opcao == "1":
+                    while True:
+                        print("------ Editar Carregador ------")
+                        print("\nO que deseja alterar?")
+                        print("1. Modelo")
+                        print("2. Fabricante")
+                        print("3. Tipo de Corrente")
+                        print("4. Potência (kW)")
+                        print("5. Tipo de Conector")
+                        print("6. Preço por kWh")
+                        print("7. Status Atual")
+                        print("8. Última Manutenção")
+                        print("9. Voltar")
+                        print("--------------------------------")
+                        opcao_alteracao = input("Escolha uma opção: ")
+                        if opcao_alteracao == "1":
+                            editar_carregador(id_carregador, "modelo")
+                            break
+                        elif opcao_alteracao == "2":
+                            editar_carregador(id_carregador, "fabricante")
+                            break
+                        elif opcao_alteracao == "3":
+                            editar_carregador(id_carregador, "tipo_corrente")
+                            break
+                        elif opcao_alteracao == "4":
+                            editar_carregador(id_carregador, "potencia_kw")
+                            break
+                        elif opcao_alteracao == "5":
+                            editar_carregador(id_carregador, "tipo_conector")
+                            break
+                        elif opcao_alteracao == "6":
+                            editar_carregador(id_carregador, "preco_por_kwh")
+                            break
+                        elif opcao_alteracao == "7":
+                            editar_carregador(id_carregador, "status_atual")
+                            break
+                        elif opcao_alteracao == "8":
+                            editar_carregador(id_carregador, "ultima_manutencao")
+                            break
+                        elif opcao_alteracao == "9":
+                            break
+                        else:
+                            print("Opção inválida. Por favor, tente novamente.")
+                elif opcao == "2":
+                    deletar_carregador(id_carregador)
+                    return
+                elif opcao == "3":
+                    break
+            elif usuario["tipo_usuario"] == "motorista":
+                print("---------------------------------------------")
+                print("1. Reservar Carregador")
+                print("2. Voltar")
+                print("---------------------------------------------")
+                
+                opcao = input("Escolha uma opção: ")
+                
+                if opcao == "1":
+                    reservar_carregador(id_usuario, id_carregador)
+                    break
+                elif opcao == "2":
+                    break
             
-            if opcao == "1":
-                while True:
-                    print("------ Editar Carregador ------")
-                    print("\nO que deseja alterar?")
-                    print("1. Modelo")
-                    print("2. Fabricante")
-                    print("3. Tipo de Corrente")
-                    print("4. Potência (kW)")
-                    print("5. Tipo de Conector")
-                    print("6. Preço por kWh")
-                    print("7. Status Atual")
-                    print("8. Última Manutenção")
-                    print("9. Voltar")
-                    print("--------------------------------")
-                    opcao_alteracao = input("Escolha uma opção: ")
-                    if opcao_alteracao == "1":
-                        editar_carregador(id_carregador, "modelo")
-                        break
-                    elif opcao_alteracao == "2":
-                        editar_carregador(id_carregador, "fabricante")
-                        break
-                    elif opcao_alteracao == "3":
-                        editar_carregador(id_carregador, "tipo_corrente")
-                        break
-                    elif opcao_alteracao == "4":
-                        editar_carregador(id_carregador, "potencia_kw")
-                        break
-                    elif opcao_alteracao == "5":
-                        editar_carregador(id_carregador, "tipo_conector")
-                        break
-                    elif opcao_alteracao == "6":
-                        editar_carregador(id_carregador, "preco_por_kwh")
-                        break
-                    elif opcao_alteracao == "7":
-                        editar_carregador(id_carregador, "status_atual")
-                        break
-                    elif opcao_alteracao == "8":
-                        editar_carregador(id_carregador, "ultima_manutencao")
-                        break
-                    elif opcao_alteracao == "9":
-                        break
-                    else:
-                        print("Opção inválida. Por favor, tente novamente.")
-            elif opcao == "2":
-                deletar_carregador(id_carregador)
-                return
-            elif opcao == "3":
-                break
     else:
         print("Carregador não encontrado.")
 
-def gerenciar_carregadores(id_unidade):
+def visualizar_carregadores(id_unidade):
+    carregadores = dados.get("carregadores", {})
+    carregadores_unidade = [carregador for carregador in carregadores.values() if carregador["id_unidade"] == id_unidade]
+
+    if carregadores_unidade:
+        for i, carregador in enumerate(carregadores_unidade, start=1):
+            print(f"{i}. {carregador['modelo']} - {carregador['fabricante']} (Status: {carregador['status_atual']})")
+    else:
+        print("Nenhum carregador cadastrado para esta unidade.")
+
+def gerenciar_carregadores(id_usuario, id_unidade):
     while True:
         print("------ Carregadores da Unidade ------")
         carregadores = dados.get("carregadores", {})
@@ -165,17 +187,22 @@ def gerenciar_carregadores(id_unidade):
         print("------------------------------------")
         print("1. Cadastrar Carregador")
         print("2. Visualizar Carregador")
+        print("------------------------------------")
         print("3. Voltar")
         
         opcao = input("Escolha uma opção: ")
+        
         if opcao == "1":
             cadastrar_carregador(id_unidade)
+            
         elif opcao == "2":
             nome_carregador = input("Digite o nome do carregador: ")
             id_carregador = buscar_id(nome_carregador, id_unidade)
-            visualizar_carregador(id_carregador)
+            visualizar_carregador(id_usuario, id_carregador)
+            
         elif opcao == "3":
-            break   
+            break
+        
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
@@ -326,3 +353,18 @@ def atualizar_status_por_hardware(id_hardware, status_arduino):
 
     print(f"[CHARGER_MANAGER] Nenhum carregador vinculado ao hardware {id_hardware}")
     return False
+
+def obter_vagas_unidade(id_unidade, dados):
+    carregadores = dados.get("carregadores", {})
+    total_carregadores = 0
+    carregadores_disponiveis = 0
+    
+    for carregador in carregadores.values():
+        if carregador.get("id_unidade") == id_unidade:
+            total_carregadores += 1
+            if carregador.get("status_atual") == "Disponivel":
+                carregadores_disponiveis += 1
+                
+    if total_carregadores == 0:
+        return "(0/0)"
+    return f"({carregadores_disponiveis}/{total_carregadores})"

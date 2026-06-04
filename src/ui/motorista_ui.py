@@ -1,5 +1,9 @@
 def menu_motorista(id_usuario):
     from .geral_ui import menu_principal
+    from ..managers.unit_manager import listar_unidades_proximas, listar_unidade
+    from ..managers.database_manager import carregar_database
+    
+    dados = carregar_database()
     
     if not id_usuario:
         print("ID do motorista não fornecido. Retornando ao menu principal.")
@@ -8,7 +12,9 @@ def menu_motorista(id_usuario):
     
     while True:
         print("------ Menu do Motorista ------")
-        print("1. Visualizar Unidades Disponíveis")
+        listar_unidades_proximas(id_usuario)
+        print("------------------------------")
+        print("1. Visualizar Unidade")
         print("2. Gerenciar Reservas")
         print("3. Sair")
         print("------------------------------")
@@ -16,11 +22,19 @@ def menu_motorista(id_usuario):
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            unidades_disponiveis()
+            unidades = dados.get("unidades", {})
+
+            nome_unidade = input("Unidade que deseja visualizar: ")
+                
+            id_unidade = next((id for id, unidade in unidades.items() if unidade["nome_unidade"] == nome_unidade), None)
+            if id_unidade:
+                listar_unidade(id_usuario, id_unidade)
+            else:
+                    print("Unidade não encontrada.")
         elif opcao == "2":
             menu_reservas(id_usuario)
         elif opcao == "3":
-            menu_principal()
+            menu_principal(id_usuario)
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")

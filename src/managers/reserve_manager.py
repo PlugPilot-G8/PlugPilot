@@ -8,7 +8,7 @@ dados = carregar_database()
 
 reservas = dados.setdefault("reservas", {})
 
-def criar_reserva(id_motorista):
+def reservar_carregador(id_motorista, id_carregador):
     usuarios = dados.get("usuarios", {})
     unidades = dados.get("unidades", {})
     carregadores = dados.get("carregadores", {})

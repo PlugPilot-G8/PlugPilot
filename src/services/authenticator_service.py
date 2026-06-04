@@ -6,6 +6,7 @@ dados = carregar_database()
 
 # Função para realizar o login de um usuário
 def login(tipo_usuario):
+    from ..services.service import obter_localizacao_usuario
     from ..ui.empresario_ui import menu_empresario
     from ..ui.motorista_ui import menu_motorista
     
@@ -48,6 +49,8 @@ def login(tipo_usuario):
     for usuario in usuarios.values():
         if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"] == documento:
 
+            obter_localizacao_usuario(usuario["id_usuario"])
+            
             print(f"\nBem-vindo {usuario['nome']}!")
             if usuario["tipo_usuario"] == "motorista":
                 input("Pressione ENTER para continuar...")

@@ -2,6 +2,7 @@
 
 from .database_manager import carregar_database, atualizar_database
 from ..services.service import gerar_id, buscar_cep_info
+from math import radians, cos, sin, asin, sqrt
 
 dados =  carregar_database()
 
@@ -64,83 +65,166 @@ def cadastrar_unidade(id_dono):
     print(f"Unidade {id_unidade} criada com sucesso.")
 
 # Função para visualizar as informações de uma unidade específica
-def listar_unidade(id_unidade):
-    from .chager_manager import listar_carregador, gerenciar_carregadores
-
+def listar_unidade(id_usuario, id_unidade):
+    from .chager_manager import visualizar_carregadores, visualizar_carregador, gerenciar_carregadores, buscar_id, obter_vagas_unidade
+    
+    # Garante a carga dos dados atualizados
+    dados = carregar_database()
     unidades = dados.get("unidades", {})
     carregadores = dados.get("carregadores", {})
 
     unidade = unidades.get(id_unidade)
+    usuario = dados.get("usuarios", {}).get(id_usuario)
 
-    # Verifica se a unidade existe no banco de dados antes de exibir as informações
     if unidade:
-        # Exibe as informações da unidade de forma formatada, incluindo os carregadores disponíveis na unidade
+        # CALCULO DINÂMICO DE VAGAS
+        vagas = obter_vagas_unidade(id_unidade, dados)
+
         print(f"-------------------- {unidade['nome_unidade']} --------------------")
         print(f"Endereço: {unidade['endereco_formatado']}")
         print(f"Horário de Funcionamento: {unidade['horario_funcionamento']['abertura']} - {unidade['horario_funcionamento']['fechamento']}")
         print(f"Funciona aos Finais de Semana: {'Sim' if unidade['horario_funcionamento']['funciona_fds'] else 'Não'}")
         print(f"Avaliação Média: {unidade['avaliacao_media']}")
+        print(f"Status: {unidade['status']}")
+        print(f"Vagas Disponíveis: {vagas}")
+        print("----------------------------------------------------------------------")
 
         print("\nCarregadores:")
 
-        encontrou_carregador = False
-
-        # Exibe os carregadores disponíveis da unidade
-        for carregador in carregadores.values():
-            if carregador["id_unidade"] == id_unidade:
-                encontrou_carregador = True
-                listar_carregador(carregador["id_carregador"])
-
-        if not encontrou_carregador:
-            print("Nenhum carregador cadastrado nessa unidade.")
-
-        print(f"------------------------------ Gerenciar Unidade --------------------------------------")
-        while True:
-            print("\nO que deseja fazer?")
-            print("\n1. Editar Unidade")
-            print("2. Deletar Unidade")
-            print("3. Gerenciar Carregadores")
-            print("4. Voltar")
-
-            opcao = input("Escolha uma opção: ")
-
-            if opcao == "1":
-                print("\nO que deseja alterar?")
-                print("1. Nome da Unidade")
-                print("2. CEP")
-                print("3. Horário de Funcionamento")
-
+        visualizar_carregadores(id_unidade)
+        
+        if usuario["tipo_usuario"] == "motorista":
+            while True:
+                print("----------------------------------------------------------------------")
+                print("1. Visualizar Carregador")
+                print("2. Voltar")
+                print("----------------------------------------------------------------------")
+                
                 opcao = input("Escolha uma opção: ")
-
+                
                 if opcao == "1":
-                    editar_unidade(id_unidade, "nome_unidade")
-                elif opcao  == "2":
-                    editar_unidade(id_unidade, "CEP")
+                    nome_carregador = input("Carregador que deseja visualizar: ")
+                    id_carregador = buscar_id(nome_carregador, id_unidade)
+                    
+                    if id_carregador:
+                        visualizar_carregador(id_usuario, id_carregador)
+                    else:
+                        print("Carregador não encontrado.")
+                        
+                elif opcao == "2":
+                    break
+                
+        elif usuario["tipo_usuario"] == "empresario":
+            while True:
+                print("----------------------------------------------------------------------")
+                print("1. Editar Unidade")
+                print("2. Deletar Unidade")
+                print("3. Gerenciar Carregadores")
+                print("4. Voltar")
+                print("----------------------------------------------------------------------")
+                
+                opcao = input("Escolha uma opção: ")
+                
+                if opcao == "1":
+                    print("\nO que deseja alterar?")
+                    print("1. Nome da Unidade")
+                    print("2. CEP")
+                    print("3. Horário de Funcionamento")
+                    
+                    opcao = input("Escolha uma opção: ")
+                    
+                    if opcao == "1":
+                        editar_unidade(id_unidade, "nome_unidade")
+                    elif opcao  == "2":
+                        editar_unidade(id_unidade, "CEP")
+                    elif opcao == "3":
+                        editar_unidade(id_unidade, "horario_funcionamento")
+                    else:
+                        print("Opção inválida.")
+                
+                elif opcao == "2":
+                    deletar_unidade(id_unidade)
+                    break
+                
                 elif opcao == "3":
-                    editar_unidade(id_unidade, "horario_funcionamento")
+                    gerenciar_carregadores(id_usuario, id_unidade)
+                    
+                elif opcao == "4":
+                    break
                 else:
                     print("Opção inválida.")
-            elif opcao == "2":
-                deletar_unidade(id_unidade)
-                break
-            elif opcao == "3":
-                gerenciar_carregadores(id_unidade)
-            elif opcao == "4":
-                break
-            else:
-                print("Opção inválida.")
-    else:
-        print("Unidade não encontrada.")
 
 def listar_unidades(id_usuario):
+    from .chager_manager import obter_vagas_unidade
+    
+    dados = carregar_database()
     unidades = dados.get("unidades", {})
     unidades_usuario = [unidade for unidade in unidades.values() if unidade["id_dono"] == id_usuario]
 
     if unidades_usuario:
+        print("\n=== Suas Unidades Cadastradas ===")
         for i, unidade in enumerate(unidades_usuario, start=1):
-            print(f"{i}. {unidade['nome_unidade']}")
+            vagas = obter_vagas_unidade(unidade["id_unidade"], dados)
+            print(f"{i}. {unidade['nome_unidade']} - Vagas: {vagas}")
     else:
         print("Nenhuma unidade cadastrada por você.")
+
+def listar_unidades_proximas(id_usuario, raio_max_km=20.0):
+    from .chager_manager import obter_vagas_unidade
+    
+    dados = carregar_database()
+    usuarios = dados.get("usuarios", {})
+    usuario = usuarios.get(id_usuario)
+    
+    if not usuario:
+        print("Usuário não encontrado.")
+        return
+
+    coordenadas_usuario = usuario.get("coordenadas_atual")
+    if not coordenadas_usuario:
+        print("Coordenadas do usuário não encontradas.")
+        return
+
+    unidades = dados.get("unidades", {})
+    unidades_proximas = []
+
+    for unidade in unidades.values():
+        coordenadas_unidade = unidade.get("coordenadas")
+        if coordenadas_unidade:
+            distancia = calcular_distancia(coordenadas_usuario, coordenadas_unidade)
+            
+            if distancia <= raio_max_km:
+                unidades_proximas.append((unidade, distancia))
+
+    unidades_proximas.sort(key=lambda x: x[1])
+
+    print(f"\n=== Estações a até {raio_max_km}km de você ===")
+    if not unidades_proximas:
+        print("Nenhuma estação encontrada nessa região.")
+        return
+
+    for unidade, distancia in unidades_proximas:
+        vagas = obter_vagas_unidade(unidade["id_unidade"], dados)
+        
+        print(f"-> {unidade['nome_unidade']}")
+        print(f"   Distância: {distancia:.2f} km")
+        print(f"   Vagas disponíveis: {vagas}") # <-- Inserido com sucesso aqui também
+        print(f"   Status: {unidade['status']} | Avaliação: ⭐ {unidade['avaliacao_media']}\n")
+
+def calcular_distancia(coordenadas_usuario, coordenadas_unidade):
+    lat1 = coordenadas_usuario["latitude"]
+    lon1 = coordenadas_usuario["longitude"]
+    lat2 = coordenadas_unidade["latitude"]
+    lon2 = coordenadas_unidade["longitude"]
+
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * asin(sqrt(a))
+    r = 6371
+    return c * r
 
 # Função para editar as informações de uma unidade existente
 def editar_unidade(id_unidade, alteracao):

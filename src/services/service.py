@@ -1,6 +1,8 @@
 import random
 import requests
+import geocoder
 from datetime import datetime
+from ..managers.database_manager import carregar_database, atualizar_database
 
 #Geradores de ID para diferentes tipos de entidades no sistema.
 TIPOS = {
@@ -67,3 +69,24 @@ def buscar_cep_info(cep):
             "longitude": longitude
         }
     }
+
+def obter_localizacao_usuario(id_usuario):
+    banco_dados = carregar_database()
+    
+    if id_usuario not in banco_dados.get("usuarios", {}):
+        print(f"[ERRO] Usuário {id_usuario} não encontrado no banco de dados.")
+        return
+
+    usuario = banco_dados["usuarios"][id_usuario]
+    
+    g = geocoder.ip('me')
+    
+    if g.latlng:
+        lat_detectada, lng_detectada = g.latlng
+        
+        usuario["coordenadas_atual"]["latitude"] = lat_detectada
+        usuario["coordenadas_atual"]["longitude"] = lng_detectada
+        
+        atualizar_database(banco_dados)
+    else:
+        print("\n[AVISO] Falha ao rastrear IP. Mantendo coordenadas padrões do JSON.")
