@@ -3,7 +3,7 @@ import numpy as np
 from ..managers.database_manager import carregar_database
 from datetime import datetime
 
-def dashboard_empresario():
+def dashboard_empresario(id_usuario):
     
     dados = carregar_database()
     usuarios = dados.get("usuarios", {})
@@ -33,7 +33,7 @@ def dashboard_empresario():
     plt.show()
 
 
-def horarios_de_pico():
+def horarios_de_pico(id_usuario):
 
     dados = carregar_database()
     usuarios = dados.get("usuarios", {})
@@ -121,21 +121,27 @@ def relatorio_carregadores(id_usuario):
         "manutencao": manutencao
     }
 
-def reservas_hoje():
+def reservas_hoje(id_usuario):
     dados = carregar_database()
     reservas = dados.get("reservas", {})
+    unidades = dados.get("unidades", {})
     hoje = datetime.now().date()
     total = 0
 
+    ids_unidades = [
+        unidade["id_unidade"]
+        for unidade in unidades.values()
+        if unidade["id_dono"] == id_usuario
+    ]
+
     for reserva in reservas.values():
-
-        data_reserva = datetime.strptime(
-            reserva["agendado_para"],
-            "%Y-%m-%dT%H:%M:%SZ"
-        ).date()
-
-        if data_reserva == hoje:
-            total += 1
+        if reserva["id_unidade"] in ids_unidades:
+            data_reserva = datetime.strptime(
+                reserva["agendado_para"],
+                "%Y-%m-%dT%H:%M:%SZ"
+            ).date()
+            if data_reserva == hoje:
+                total += 1
 
     return total
 

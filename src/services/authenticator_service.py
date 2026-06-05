@@ -25,7 +25,6 @@ def login(tipo_usuario, serial_service):
         if validar_senha(senha):
             break
         print("Senha invalida! Por favor, tente novamente.")
-        return None
 
     if tipo_usuario == "empresario":
         while True:
