@@ -84,6 +84,7 @@ def obter_localizacao_usuario(id_usuario):
     if g.latlng:
         lat_detectada, lng_detectada = g.latlng
         
+        usuario.setdefault("coordenadas_atual", {})
         usuario["coordenadas_atual"]["latitude"] = lat_detectada
         usuario["coordenadas_atual"]["longitude"] = lng_detectada
         

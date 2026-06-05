@@ -1,9 +1,9 @@
 from .geral_ui import menu_principal
 
-def menu_empresario(id_usuario):
+def menu_empresario(serial_service, id_usuario):
     if not id_usuario:
         print("ID do motorista não fornecido. Retornando ao menu principal.")
-        menu_principal()
+        menu_principal(serial_service)
         return
     
     while True:
@@ -17,16 +17,16 @@ def menu_empresario(id_usuario):
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            gerenciar_unidades(id_usuario)
+            gerenciar_unidades(serial_service, id_usuario)
         elif opcao == "2":
-            menu_dashboard_empresario(id_usuario)
+            menu_dashboard_empresario(serial_service, id_usuario)
         elif opcao == "3":
-            menu_principal()
+            menu_principal(serial_service)
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-def menu_dashboard_empresario(id_usuario):
+def menu_dashboard_empresario(serial_service, id_usuario):
     from ..services.dashboard import (
         dashboard_empresario, 
         horarios_de_pico, 
@@ -37,7 +37,7 @@ def menu_dashboard_empresario(id_usuario):
     
     if not id_usuario:
         print("ID do motorista não fornecido. Retornando ao menu principal.")
-        menu_principal()
+        menu_principal(serial_service)
         return
     
     while True:
@@ -64,7 +64,7 @@ def menu_dashboard_empresario(id_usuario):
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
-def gerenciar_unidades(id_usuario): 
+def gerenciar_unidades(serial_service, id_usuario): 
     from ..managers.database_manager import carregar_database
     from ..managers.unit_manager import (
         cadastrar_unidade, 
@@ -75,7 +75,7 @@ def gerenciar_unidades(id_usuario):
     
     if not id_usuario:
         print("ID do motorista não fornecido. Retornando ao menu principal.")
-        menu_principal()
+        menu_principal(serial_service)
         return
     
     dados = carregar_database()

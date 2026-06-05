@@ -65,7 +65,7 @@ def cadastrar_unidade(id_dono):
     print(f"Unidade {id_unidade} criada com sucesso.")
 
 # Função para visualizar as informações de uma unidade específica
-def listar_unidade(id_usuario, id_unidade):
+def listar_unidade(id_usuario, id_unidade, serial_service=None):
     from .chager_manager import visualizar_carregadores, visualizar_carregador, gerenciar_carregadores, buscar_id, obter_vagas_unidade
     
     # Garante a carga dos dados atualizados
@@ -107,7 +107,7 @@ def listar_unidade(id_usuario, id_unidade):
                     id_carregador = buscar_id(nome_carregador, id_unidade)
                     
                     if id_carregador:
-                        visualizar_carregador(id_usuario, id_carregador)
+                        visualizar_carregador(id_usuario, id_carregador, serial_service)
                     else:
                         print("Carregador não encontrado.")
                         

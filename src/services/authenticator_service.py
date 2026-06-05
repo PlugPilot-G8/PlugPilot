@@ -1,64 +1,75 @@
-#authenticator.py - Responsável por fornecer funções de autenticação para o sistema, como login, logout, verificação de sessão, etc.
+# authenticator_service.py - Autenticacao de usuarios do sistema.
+
 from ..validators.validator import validar_email, validar_cpf, validar_cnpj, validar_senha
 from ..managers.database_manager import carregar_database
 
-dados = carregar_database()
+def _somente_digitos(valor):
+    return "".join(filter(str.isdigit, valor))
 
 # Função para realizar o login de um usuário
-def login(tipo_usuario):
-    from ..services.service import obter_localizacao_usuario
-    from ..ui.empresario_ui import menu_empresario
+def login(tipo_usuario, serial_service):
     from ..ui.motorista_ui import menu_motorista
+    from ..ui.empresario_ui import menu_empresario
     
+    dados = carregar_database()
     usuarios = dados.get("usuarios", {})
-    # Recebe e valida as informações do usuário
+
     while True:
-        email = input("Email: ")
-        if not validar_email(email):
-            print("Email inválido! Por favor, tente novamente.")
-        else:
+        email = input("Email: ").strip()
+        if validar_email(email):
             break
-    
+        print("Email invalido! Por favor, tente novamente.")
+
     while True:
-        senha = input("Senha: ")
-        if not validar_senha(senha):
-            print("Senha inválida! Por favor, tente novamente.")
-            return
-        else:
+        senha = input("Senha: ").strip()
+        if validar_senha(senha):
             break
-    
-    if tipo_usuario=="empresario":
+        print("Senha invalida! Por favor, tente novamente.")
+        return None
+
+    if tipo_usuario == "empresario":
         while True:
-            documento=input("Digite o seu CNPJ: ")
-            if not validar_cnpj(documento):
-                print("CNPJ inválido! Por favor, tente novamente.")
-            else:
+            documento = input("Digite o seu CNPJ: ").strip()
+            if validar_cnpj(documento):
                 break
+            print("CNPJ invalido! Por favor, tente novamente.")
     elif tipo_usuario == "motorista":
         while True:
-            documento=input("Digite o seu CPF: ")
-            if not validar_cpf(documento):
-                print("CPF inválido! Por favor, tente novamente.")
-            else:
+            documento = input("Digite o seu CPF: ").strip()
+            if validar_cpf(documento):
                 break
+            print("CPF invalido! Por favor, tente novamente.")
     else:
-        print("Tipo de usuário inválido! Por favor, tente novamente.")
-        return
+        print("Tipo de usuario invalido! Por favor, tente novamente.")
+        return None
 
-    # Verifica as credenciais do usuário no banco de dados, comparando o email, senha e documento fornecidos com os registros existentes
+    documento_informado = _somente_digitos(documento)
+
     for usuario in usuarios.values():
-        if usuario["email"] == email and usuario["senha"] == senha and usuario["documento"] == documento:
+        documento_banco = _somente_digitos(usuario.get("documento", ""))
 
-            obter_localizacao_usuario(usuario["id_usuario"])
+        if (
+            usuario.get("tipo_usuario") == tipo_usuario
+            and usuario.get("email", "").lower() == email.lower()
+            and usuario.get("senha") == senha
+            and documento_banco == documento_informado
+        ):
+            try:
+                from .service import obter_localizacao_usuario
+                obter_localizacao_usuario(usuario["id_usuario"])
+            except Exception as erro:
+                print(f"[AVISO] Nao foi possivel atualizar a localizacao: {erro}")
             
             print(f"\nBem-vindo {usuario['nome']}!")
+            input("Pressione ENTER para continuar...")
+
             if usuario["tipo_usuario"] == "motorista":
-                input("Pressione ENTER para continuar...")
-                menu_motorista(usuario["id_usuario"])
+                menu_motorista(serial_service, usuario["id_usuario"])
             elif usuario["tipo_usuario"] == "empresario":
-                input("Pressione ENTER para continuar...")
-                menu_empresario(usuario["id_usuario"])
-        else:
-            print(f"Login Inválido! Por favor, tente novamente.")
+                menu_empresario(serial_service, usuario["id_usuario"])
+
+            return usuario
+
+    print("Login invalido! Por favor, tente novamente.")
     input("Pressione ENTER para continuar...")
     return None

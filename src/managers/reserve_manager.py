@@ -1,90 +1,102 @@
-# reserve_manager.py - Gerenciamento e CRUD das reservas
+# reserve_manager.py - Gerenciamento e CRUD das reservas.
+
+from datetime import datetime, timedelta
 
 from .database_manager import carregar_database, atualizar_database
 from ..services.service import gerar_id
-from datetime import datetime
 
-dados = carregar_database()
 
-reservas = dados.setdefault("reservas", {})
+STATUS_AGENDADA = "Agendada"
+STATUS_EM_ANDAMENTO = "Em andamento"
+STATUS_CONCLUIDA = "Concluida"
 
-def reservar_carregador(id_motorista, id_carregador):
+
+def criar_reserva(id_motorista):
+    return reservar_carregador(id_motorista)
+
+
+def reservar_carregador(id_motorista, id_carregador=None):
+    dados = carregar_database()
     usuarios = dados.get("usuarios", {})
     unidades = dados.get("unidades", {})
     carregadores = dados.get("carregadores", {})
+    reservas = dados.setdefault("reservas", {})
 
     if id_motorista not in usuarios:
-        print("Motorista não encontrado.")
-        return
+        print("Motorista nao encontrado.")
+        return None
 
     usuario = usuarios[id_motorista]
 
-    if usuario["tipo_usuario"] != "motorista":
+    if usuario.get("tipo_usuario") != "motorista":
         print("Apenas motoristas podem criar reservas.")
-        return
+        return None
 
-    id_unidade = input("Digite o ID da unidade: ")
+    if id_carregador:
+        if id_carregador not in carregadores:
+            print("Carregador nao encontrado.")
+            return None
+        id_unidade = carregadores[id_carregador]["id_unidade"]
+    else:
+        id_unidade = input("Digite o ID da unidade: ")
 
-    if id_unidade not in unidades:
-        print("Unidade não encontrada.")
-        return
+        if id_unidade not in unidades:
+            print("Unidade nao encontrada.")
+            return None
 
-    id_carregador = input("Digite o ID do carregador: ")
+        id_carregador = input("Digite o ID do carregador: ")
 
-    if id_carregador not in carregadores:
-        print("Carregador não encontrado.")
-        return
+        if id_carregador not in carregadores:
+            print("Carregador nao encontrado.")
+            return None
 
     carregador = carregadores[id_carregador]
 
-    # Verifica se carregador pertence à unidade
     if carregador["id_unidade"] != id_unidade:
-        print("Esse carregador não pertence à unidade informada.")
-        return
+        print("Esse carregador nao pertence a unidade informada.")
+        return None
 
-    # Verifica disponibilidade
     if carregador["status_atual"].lower() != "disponivel":
-        print("Carregador indisponível.")
-        return
+        print("Carregador indisponivel.")
+        return None
 
     agendado_para = input("Digite a data da reserva (AAAA-MM-DD HH:MM): ")
-
-    duracao_minutos = int(input("Digite a duração da reserva em minutos: "))
-
+    duracao_minutos = int(input("Digite a duracao da reserva em minutos: "))
     valor_estimado = float(input("Digite o valor estimado da recarga: "))
 
     id_reserva = gerar_id("reserva")
+    reserva = {
+        "id_reserva": id_reserva,
+        "id_motorista": id_motorista,
+        "id_unidade": id_unidade,
+        "id_carregador": id_carregador,
+        "status_reserva": STATUS_AGENDADA,
+        "agendado_para": agendado_para,
+        "duracao_minutos": duracao_minutos,
+        "valor_estimado": valor_estimado,
+        "kwh_consumido": 0.0,
+        "data_criacao": datetime.now().isoformat(),
+    }
 
-    reservas.update({
-        id_reserva: {
-            "id_reserva": id_reserva,
-            "id_motorista": id_motorista,
-            "id_unidade": id_unidade,
-            "id_carregador": id_carregador,
-            "status_reserva": "Agendada",
-            "agendado_para": agendado_para,
-            "duracao_minutos": duracao_minutos,
-            "valor_estimado": valor_estimado,
-            "kwh_consumido": 0.0,
-            "data_criacao": datetime.now().isoformat()
-        }
-    })
-
-    # adiciona reserva ao histórico do usuário
-    usuarios[id_motorista]["historico_reservas"].append(id_reserva)
+    reservas[id_reserva] = reserva
+    usuarios[id_motorista].setdefault("historico_reservas", []).append(id_reserva)
 
     atualizar_database(dados)
-
     print(f"Reserva {id_reserva} criada com sucesso!")
+    return reserva
 
 
 def visualizar_reserva(id_reserva):
+    dados = carregar_database()
+    reserva = dados.get("reservas", {}).get(id_reserva)
 
-    reserva = reservas.get(id_reserva)
+    if not reserva:
+        print("Reserva nao encontrada.")
+        return None
 
-    if reserva:
+    valor_estimado = reserva.get("valor_estimado", reserva.get("valor_estimated", 0.0))
 
-        print(f"""
+    print(f"""
 ================ RESERVA =================
 
 ID Reserva: {reserva['id_reserva']}
@@ -93,115 +105,163 @@ Unidade: {reserva['id_unidade']}
 Carregador: {reserva['id_carregador']}
 Status: {reserva['status_reserva']}
 Agendamento: {reserva['agendado_para']}
-Duração: {reserva['duracao_minutos']} minutos
-Valor Estimado: R$ {reserva['valor_estimado']}
+Duracao: {reserva['duracao_minutos']} minutos
+Valor Estimado: R$ {valor_estimado}
 kWh Consumido: {reserva['kwh_consumido']}
 
 ==========================================
 """)
 
-    else:
-        print("Reserva não encontrada.")
-
 
 def editar_reserva(id_reserva, alteracao):
-
+    dados = carregar_database()
+    reservas = dados.get("reservas", {})
     reserva = reservas.get(id_reserva)
 
     if not reserva:
-        print("Reserva não encontrada.")
+        print("Reserva nao encontrada.")
         return
 
     if alteracao == "status":
-
-        novo_status = input(
-            "Digite o novo status (Agendada/Concluida/Cancelada): "
-        )
-
-        if novo_status == reserva["status_reserva"]:
-            print("Escolha um status diferente.")
-            return
-
-        reserva["status_reserva"] = novo_status
-
+        nova_info = input("Digite o novo status (Agendada/Concluida/Cancelada): ")
+        campo = "status_reserva"
     elif alteracao == "agendamento":
-
-        novo_agendamento = input(
-            "Digite a nova data (AAAA-MM-DD HH:MM): "
-        )
-
-        if novo_agendamento == reserva["agendado_para"]:
-            print("Escolha uma data diferente.")
-            return
-
-        reserva["agendado_para"] = novo_agendamento
-
+        nova_info = input("Digite a nova data (AAAA-MM-DD HH:MM): ")
+        campo = "agendado_para"
     elif alteracao == "duracao":
-
-        nova_duracao = int(
-            input("Digite a nova duração em minutos: ")
-        )
-
-        if nova_duracao == reserva["duracao_minutos"]:
-            print("Escolha uma duração diferente.")
-            return
-
-        reserva["duracao_minutos"] = nova_duracao
-
+        nova_info = int(input("Digite a nova duracao em minutos: "))
+        campo = "duracao_minutos"
     elif alteracao == "valor":
-
-        novo_valor = float(
-            input("Digite o novo valor estimado: ")
-        )
-
-        if novo_valor == reserva["valor_estimado"]:
-            print("Escolha um valor diferente.")
-            return
-
-        reserva["valor_estimado"] = novo_valor
-
+        nova_info = float(input("Digite o novo valor estimado: "))
+        campo = "valor_estimado"
     elif alteracao == "consumo":
-
-        novo_consumo = float(
-            input("Digite o consumo em kWh: ")
-        )
-
-        if novo_consumo == reserva["kwh_consumido"]:
-            print("Escolha um valor diferente.")
-            return
-
-        reserva["kwh_consumido"] = novo_consumo
-
+        nova_info = float(input("Digite o consumo em kWh: "))
+        campo = "kwh_consumido"
     else:
-        print("Alteração inválida.")
-        return
+        print("Alteracao invalida.")
+        return None
 
+    if reserva.get(campo) == nova_info:
+        print("Escolha um valor diferente.")
+        return None
+
+    reserva[campo] = nova_info
     atualizar_database(dados)
-
     print("Reserva atualizada com sucesso!")
+    return reserva
 
 
 def deletar_reserva(id_reserva):
+    dados = carregar_database()
     usuarios = dados.get("usuarios", {})
-
+    reservas = dados.get("reservas", {})
     reserva = reservas.get(id_reserva)
 
     if not reserva:
-        print("Reserva não encontrada.")
-        return
+        print("Reserva nao encontrada.")
+        return None
 
     id_motorista = reserva["id_motorista"]
 
-    # remove do histórico do usuário
     if id_motorista in usuarios:
-
-        historico = usuarios[id_motorista]["historico_reservas"]
-
+        historico = usuarios[id_motorista].setdefault("historico_reservas", [])
         if id_reserva in historico:
             historico.remove(id_reserva)
 
     del reservas[id_reserva]
-
     atualizar_database(dados)
-
     print(f"Reserva {id_reserva} deletada com sucesso!")
+    return reserva
+
+
+def _converter_data_reserva(data_texto):
+    if not data_texto:
+        return None
+
+    data_texto = data_texto.strip()
+    formatos = [
+        "%Y-%m-%d %H:%M",
+        "%Y %m %d %H:%M",
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%d/%m/%Y %H:%M",
+    ]
+
+    for formato in formatos:
+        try:
+            return datetime.strptime(data_texto, formato)
+        except ValueError:
+            continue
+
+    partes = data_texto.split()
+    if len(partes) >= 4:
+        data_corrigida = f"{partes[0]}-{partes[1]}-{partes[2]} {partes[3]}"
+        return datetime.strptime(data_corrigida, "%Y-%m-%d %H:%M")
+
+    raise ValueError(f"Formato de data invalido: '{data_texto}'. Use AAAA-MM-DD HH:MM")
+
+
+def buscar_reserva_ativa_por_carregador(id_carregador):
+    dados = carregar_database()
+    agora = datetime.now()
+
+    for reserva in dados.get("reservas", {}).values():
+        if reserva["id_carregador"] != id_carregador:
+            continue
+
+        if reserva["status_reserva"] != STATUS_AGENDADA:
+            continue
+
+        inicio = _converter_data_reserva(reserva["agendado_para"])
+        fim = inicio + timedelta(minutes=reserva["duracao_minutos"])
+
+        if inicio <= agora <= fim:
+            return reserva
+
+    return None
+
+
+def carregador_esta_reservado(id_carregador):
+    return buscar_reserva_ativa_por_carregador(id_carregador) is not None
+
+
+def obter_comando_estado_carregador(id_carregador):
+    if carregador_esta_reservado(id_carregador):
+        return f"RESERVED:{id_carregador}"
+
+    return f"FREE:{id_carregador}"
+
+def validar_liberacao_por_codigo(
+    id_carregador,
+    id_motorista,
+    codigo_digitado,
+    codigos_ativos,
+):
+    reserva = buscar_reserva_ativa_por_carregador(id_carregador)
+
+    if not reserva:
+        return True, "Carregador livre. Uso permitido."
+
+    if reserva["id_motorista"] != id_motorista:
+        return False, "Este carregador esta reservado para outro usuario."
+
+    codigo_info = codigos_ativos.get(id_carregador)
+
+    if not codigo_info:
+        return False, "Nenhum codigo ativo para este carregador."
+
+    if datetime.now() > codigo_info["expira_em"]:
+        return False, "Codigo expirado."
+
+    if codigo_info["codigo"] != codigo_digitado:
+        return False, "Codigo incorreto."
+
+    dados = carregar_database()
+    reserva_banco = dados.get("reservas", {}).get(reserva["id_reserva"])
+
+    if reserva_banco:
+        reserva_banco["status_reserva"] = STATUS_EM_ANDAMENTO
+        reserva_banco["inicio_recarga"] = datetime.now().isoformat()
+        atualizar_database(dados)
+
+    return True, "Reserva validada. Uso permitido."
