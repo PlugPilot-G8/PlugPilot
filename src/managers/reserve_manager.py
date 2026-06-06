@@ -68,7 +68,6 @@ def reservar_carregador(id_motorista, id_carregador=None):
         conn.close()
         return None
 
-
     data_reserva = input("Digite a DATA da reserva (AAAA-MM-DD): ")
     try:
         data_obj = datetime.strptime(data_reserva.strip(), "%Y-%m-%d").date()

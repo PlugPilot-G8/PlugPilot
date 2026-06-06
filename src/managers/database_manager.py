@@ -1,4 +1,4 @@
-# database_manager.py - Gerenciamento e inicialização do banco de dados SQLite
+# database_manager.py - Gerenciamento e inicialização do banco de dados SQLite do PlugPilot
 
 import sqlite3
 import os
@@ -8,11 +8,9 @@ DB_PATH = os.path.join(DB_DIR, "database.db")
 
 def conectar():
     os.makedirs(DB_DIR, exist_ok=True)
-    
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
-    
     return conn
 
 def criar_tabelas():
@@ -45,7 +43,7 @@ def criar_tabelas():
         longitude REAL,
         abertura TEXT,
         fechamento TEXT,
-        funciona_fds INTEGER CHECK(funciona_fds IN (0, 1)), -- 0=False, 1=True
+        funciona_fds INTEGER CHECK(funciona_fds IN (0, 1)),
         avaliacao_media REAL,
         FOREIGN KEY(id_dono) REFERENCES usuarios(id_usuario) ON DELETE RESTRICT
     );
@@ -71,7 +69,7 @@ def criar_tabelas():
         FOREIGN KEY(id_unidade) REFERENCES unidades(id_unidade) ON DELETE CASCADE
     );
     """)
-
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS reservas (
         id_reserva TEXT PRIMARY KEY,
@@ -80,6 +78,8 @@ def criar_tabelas():
         id_carregador TEXT NOT NULL,
         status_reserva TEXT NOT NULL,
         agendado_para TEXT NOT NULL,
+        data_reserva TEXT NOT NULL,
+        hora_reserva TEXT NOT NULL,
         duracao_minutos INTEGER NOT NULL,
         valor_estimado REAL,
         kwh_consumido REAL,
@@ -90,7 +90,7 @@ def criar_tabelas():
     """)
 
     conn.commit()
-    
+
     popular_dados_teste(cursor)
     
     conn.commit()
@@ -110,7 +110,7 @@ def popular_dados_teste(cursor):
         
         cursor.execute("""
             INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro, latitude, longitude)
-            VALUES ('52123456', 'Lucas Motorista', 'motorista', '12345678900', 'motorista@gmail.com', ?, '11988888888', '2026-06-05', -23.55052, -46.633309)
+            VALUES ('52123456', 'Lucas Motorista', 'motorista', '12345678900', 'motorista@gmail.com', ?, '11988888888', '2026-06', -8.1743, -34.9224)
         """, (criptografar_senha('Motorista@123'),))
         
         cursor.execute("""
