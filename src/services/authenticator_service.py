@@ -1,9 +1,10 @@
 # authenticator_service.py - Autenticacao de usuarios do sistema via SQLite.
 
-from ..validators.validator import validar_email, validar_cpf, validar_cnpj, validar_senha
+from ..validators.validator import validar_email, validar_cpf, validar_cnpj, validar_senha, criptografar_senha
+from ..services.service import obter_localizacao_usuario
 from ..managers.database_manager import conectar
 
-def _somente_digitos(valor):
+def somente_digitos(valor):
     return "".join(filter(str.isdigit, valor))
 
 def login(tipo_usuario, serial_service):
@@ -38,8 +39,8 @@ def login(tipo_usuario, serial_service):
         print("Tipo de usuario invalido! Por favor, tente novamente.")
         return None
 
-    documento_informado = _somente_digitos(documento)
-
+    documento_informado = somente_digitos(documento)
+    
     conn = conectar()
     cursor = conn.cursor()
 
@@ -48,13 +49,13 @@ def login(tipo_usuario, serial_service):
         WHERE LOWER(email) = LOWER(?) 
           AND senha = ? 
           AND tipo_usuario = ?
-    """, (email, senha, tipo_usuario))
+    """, (email, criptografar_senha(senha), tipo_usuario))
     
     usuario_row = cursor.fetchone()
     conn.close()
 
     if usuario_row:
-        documento_banco = _somente_digitos(usuario_row["documento"] if usuario_row["documento"] is not None else "")
+        documento_banco = somente_digitos(usuario_row["documento"] if usuario_row["documento"] is not None else "")
         
         if documento_banco == documento_informado:
             usuario = dict(usuario_row)
@@ -67,7 +68,7 @@ def login(tipo_usuario, serial_service):
             
             print(f"\nBem-vindo {usuario['nome']}!")
             input("Pressione ENTER para continuar...")
-
+            
             if usuario["tipo_usuario"] == "motorista":
                 menu_motorista(serial_service, usuario["id_usuario"])
             elif usuario["tipo_usuario"] == "empresario":

@@ -1,6 +1,7 @@
 # validator.py - Funções robustas de validação de dados de entrada para o PlugPilot.
 
 import re
+import hashlib
 
 DOCUMENTOS_TESTE = {
     "12345678900",
@@ -86,3 +87,6 @@ def validar_telefone(telefone):
     
     padrao_telefone = r'^\(?[1-9]{2}\)?\s?(?:9\d{4}|\d{4})-?\d{4}$'
     return bool(re.match(padrao_telefone, telefone.strip()))
+
+def criptografar_senha(senha):
+        return hashlib.sha256(senha.encode('utf-8')).hexdigest()
