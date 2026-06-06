@@ -11,7 +11,6 @@ STATUS_ARDUINO_PARA_SISTEMA = {
     "LOCKED": "Reservado",
 }
 
-
 def buscar_id(nome_carregador, id_unidade):
     conn = conectar()
     cursor = conn.cursor()
@@ -22,7 +21,6 @@ def buscar_id(nome_carregador, id_unidade):
     resultado = cursor.fetchone()
     conn.close()
     return resultado["id_carregador"] if resultado else None
-
 
 def buscar_carregador_por_identificador(identificador):
     conn = conectar()
@@ -38,7 +36,6 @@ def buscar_carregador_por_identificador(identificador):
     if resultado:
         return resultado["id_carregador"], resultado
     return None, None
-
 
 def cadastrar_carregador(id_unidade):
     id_carregador = gerar_id("carregador")
@@ -85,7 +82,6 @@ def cadastrar_carregador(id_unidade):
     finally:
         conn.close()
 
-
 def visualizar_carregador(id_usuario, id_carregador, serial_service=None):
     from .reserve_manager import reservar_carregador
 
@@ -127,7 +123,7 @@ def visualizar_carregador(id_usuario, id_carregador, serial_service=None):
 
             if opcao == "1":
                 _menu_editar_carregador(id_carregador)
-                # Recarrega as infos atualizadas do banco para o loop printar certo
+                
                 conn = conectar()
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM carregadores WHERE id_carregador = ?", (id_carregador,))
@@ -158,7 +154,6 @@ def visualizar_carregador(id_usuario, id_carregador, serial_service=None):
                 return
             else:
                 print("Opcao invalida.")
-
 
 def _menu_editar_carregador(id_carregador):
     opcoes = {

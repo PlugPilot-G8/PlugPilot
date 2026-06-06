@@ -13,9 +13,6 @@ OPCOES_DURACAO = {
     "4": {"minutos": 60, "preco": 50.00},
 }
 
-def criar_reserva(id_motorista):
-    return reservar_carregador(id_motorista)
-
 def reservar_carregador(id_motorista, id_carregador=None):
     conn = conectar()
     cursor = conn.cursor()
@@ -42,15 +39,14 @@ def reservar_carregador(id_motorista, id_carregador=None):
         id_unidade = carregador["id_unidade"]
         
     else:
-        id_unidade = input("Digite o ID da unidade: ")
+        id_unidade = input("Digite o ID da unidade: ").strip()
         cursor.execute("SELECT id_unidade FROM unidades WHERE id_unidade = ?", (id_unidade,))
         if not cursor.fetchone():
             print("Unidade nao encontrada.")
             conn.close()
             return None
 
-        id_carregador = input("Digite o ID do carregador: ")
-        
+        id_carregador = input("Digite o ID do carregador: ").strip()
         cursor.execute("SELECT id_unidade, status_atual FROM carregadores WHERE id_carregador = ?", (id_carregador,))
         carregador = cursor.fetchone()
         if not carregador:
@@ -63,14 +59,14 @@ def reservar_carregador(id_motorista, id_carregador=None):
         conn.close()
         return None
 
-    if carregador["status_atual"].lower() != "disponivel":
+    if carregador["status_atual"].upper() != "FREE":
         print("Carregador indisponivel.")
         conn.close()
         return None
 
-    data_reserva = input("Digite a DATA da reserva (AAAA-MM-DD): ")
+    data_reserva = input("Digite a DATA da reserva (AAAA-MM-DD): ").strip()
     try:
-        data_obj = datetime.strptime(data_reserva.strip(), "%Y-%m-%d").date()
+        data_obj = datetime.strptime(data_reserva, "%Y-%m-%d").date()
     except ValueError:
         print("Formato de data invalido. Use AAAA-MM-DD")
         conn.close()
@@ -81,9 +77,9 @@ def reservar_carregador(id_motorista, id_carregador=None):
         conn.close()
         return None
 
-    hora_reserva = input("Digite o HORARIO da reserva (HH:MM): ")
+    hora_reserva = input("Digite o HORARIO da reserva (HH:MM): ").strip()
     try:
-        hora_obj = datetime.strptime(hora_reserva.strip(), "%H:%M").time()
+        hora_obj = datetime.strptime(hora_reserva, "%H:%M").time()
     except ValueError:
         print("Formato de horario invalido. Use HH:MM")
         conn.close()
@@ -97,14 +93,13 @@ def reservar_carregador(id_motorista, id_carregador=None):
         return None
 
     data_formatada = data_hora_obj.isoformat()
-    data_iso = data_obj.isoformat()       # MODIFICADO: chave separada para data (linha 96)
-    hora_str = hora_obj.strftime("%H:%M") # MODIFICADO: chave separada para hora (linha 97)
+    data_iso = data_obj.isoformat()
+    hora_str = hora_obj.strftime("%H:%M")
 
-    
     print("""
-========= TEMPO DE RECARGA =========
+========= TEMPO DE RESERVA =========
   [1] 15 minutos  - R$  12,50
-  [2] 30 minutos  - R$  25,00
+  [2] 30 minutes  - R$  25,00
   [3] 45 minutos  - R$  37,50
   [4] 60 minutos  - R$  50,00
 ====================================
@@ -117,9 +112,7 @@ def reservar_carregador(id_motorista, id_carregador=None):
 
     duracao_minutos = OPCOES_DURACAO[opcao]["minutos"]
     valor_estimado = OPCOES_DURACAO[opcao]["preco"]
-
     id_reserva = gerar_id("reserva")
-
 
     cursor.execute("""
         INSERT INTO reservas (
@@ -142,35 +135,148 @@ def reservar_carregador(id_motorista, id_carregador=None):
     print(f"Reserva {id_reserva} criada com sucesso!")
     return reserva_criada
 
+def listar_reservas(id_usuario):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM reservas WHERE id_motorista = ?", (id_usuario,))
+    reservas = cursor.fetchall()
+    
+    if not reservas:
+        print("Nenhuma reserva encontrada.")
+        conn.close()
+        return []
 
-def visualizar_reserva(id_reserva):
+    lista_formatada = []
+    for r in reservas:
+        unidade = cursor.execute("SELECT nome_unidade FROM unidades WHERE id_unidade = ?", (r["id_unidade"],)).fetchone()
+        carregador = cursor.execute("SELECT modelo FROM carregadores WHERE id_carregador = ?", (r["id_carregador"],)).fetchone()
+        
+        nome_unidade = unidade['nome_unidade'] if unidade else r["id_unidade"]
+        modelo_carregador = carregador['modelo'] if carregador else r["id_carregador"]
+
+        print(f"""
+============================================
+ID Reserva: {r['id_reserva']}
+Unidade: {nome_unidade}
+Carregador: {modelo_carregador}
+Data: {r['data_reserva']}
+Hora: {r['hora_reserva']}
+Status: {r['status_reserva']}
+Valor Estimado: R$ {r['valor_estimado']:.2f}
+""")
+        lista_formatada.append(dict(r))
+        
+    conn.close()
+    return lista_formatada
+
+def visualizar_reserva(id_reserva, id_motorista, serial_service=None):
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM reservas WHERE id_reserva = ?", (id_reserva,))
     reserva = cursor.fetchone()
+    
+    unidade = cursor.execute("SELECT nome_unidade FROM unidades WHERE id_unidade = ?", (reserva["id_unidade"],)).fetchone()
+    carregador = cursor.execute("SELECT modelo FROM carregadores WHERE id_carregador = ?", (reserva["id_carregador"],)).fetchone()
+    usuario = cursor.execute("SELECT nome FROM usuarios WHERE id_usuario = ?", (reserva["id_motorista"],)).fetchone()
+        
+    nome_unidade = unidade['nome_unidade'] if unidade else reserva["id_unidade"]
+    modelo_carregador = carregador['modelo'] if carregador else reserva["id_carregador"]
+    nome_usuario = usuario['nome'] if usuario else reserva["id_motorista"]
+    
     conn.close()
 
     if not reserva:
         print("Reserva nao encontrada.")
         return None
 
-    # MODIFICADO: exibe data e hora separadamente no print (linhas 148-149)
     print(f"""
 ================ RESERVA =================
 
 ID Reserva: {reserva['id_reserva']}
-Motorista: {reserva['id_motorista']}
-Unidade: {reserva['id_unidade']}
-Carregador: {reserva['id_carregador']}
+Motorista: {nome_usuario}
+Unidade: {nome_unidade}
+Carregador: {modelo_carregador}
 Status: {reserva['status_reserva']}
 Data: {reserva['data_reserva']}
 Hora: {reserva['hora_reserva']}
 Duracao: {reserva['duracao_minutos']} minutos
-Valor Estimado: R$ {reserva['valor_estimado']}
+Valor Estimado: R$ {reserva['valor_estimado']:.2f}
 kWh Consumido: {reserva['kwh_consumido']}
 
 ==========================================
 """)
+    
+    mapeamento_edicao = {
+        "1": "agendamento",
+        "2": "duracao",
+        "3": "valor",
+        "4": "consumo"
+    }
+
+    while True:
+        print("Gerenciar Reserva:")
+        print("1. Editar Reserva")
+        print("2. Deletar Reserva")
+        print("3. Iniciar Recarga")
+        print("4. Finalizar Reserva")
+        print("5. Voltar")
+        print("===========================================")
+        
+        opcao = input("Escolha uma opção: ").strip()
+        
+        if opcao == "1":
+            while True:
+                print("\nO que deseja editar?")
+                print("1. Data/Hora da Reserva")
+                print("2. Duracao da Reserva")
+                print("3. Valor Estimado")
+                print("4. kWh Consumido")
+                print("5. Voltar")
+
+                alteracao = input("Escolha uma opção: ").strip()
+
+                if alteracao == "5":
+                    break
+                elif alteracao in mapeamento_edicao:
+                    editar_reserva(id_reserva, mapeamento_edicao[alteracao])
+                    break
+                else:
+                    print("Opção inválida.")
+                
+        elif opcao == "2":
+            confirmacao = input("Tem certeza que deseja deletar esta reserva? (s/n): ").strip().lower()
+            if confirmacao == "s":
+                if deletar_reserva(id_reserva):
+                    return None
+
+        elif opcao == "3":
+            if not serial_service:
+                print("[SERIAL] Servico serial indisponivel.")
+                continue
+
+            codigo = input("Digite o codigo exibido no LCD: ").strip()
+            sucesso = serial_service.liberar_por_codigo(
+                id_carregador=reserva["id_carregador"],
+                id_motorista=id_motorista,
+                codigo_digitado=codigo,
+                validar_liberacao_callback=validar_liberacao_por_codigo
+            )
+
+            if sucesso:
+                print("[PlugPilot] Carregador liberado.")
+                return None
+            else:
+                print("[PlugPilot] Codigo incorreto, expirado ou reserva invalida.")
+                
+        elif opcao == "4":
+            if finalizar_reserva(id_reserva):
+                return None
+
+        elif opcao == "5":
+            break
+        else:
+            print("Opção inválida. Por favor, tente novamente.")
+
     return dict(reserva)
 
 def editar_reserva(id_reserva, alteracao):
@@ -185,14 +291,10 @@ def editar_reserva(id_reserva, alteracao):
         conn.close()
         return None
 
-    if alteracao == "status":
-        nova_info = input("Digite o novo status (Agendada/Concluida/Cancelada): ")
-        campo = "status_reserva"
-
-    elif alteracao == "agendamento":
-        nova_data = input("Digite a nova DATA (AAAA-MM-DD): ")
+    if alteracao == "agendamento":
+        nova_data = input("Digite a nova DATA (AAAA-MM-DD): ").strip()
         try:
-            data_obj = datetime.strptime(nova_data.strip(), "%Y-%m-%d").date()
+            data_obj = datetime.strptime(nova_data, "%Y-%m-%d").date()
         except ValueError:
             print("Formato de data invalido.")
             conn.close()
@@ -203,9 +305,9 @@ def editar_reserva(id_reserva, alteracao):
             conn.close()
             return None
 
-        nova_hora = input("Digite o novo HORARIO (HH:MM): ")
+        nova_hora = input("Digite o novo HORARIO (HH:MM): ").strip()
         try:
-            hora_obj = datetime.strptime(nova_hora.strip(), "%H:%M").time()
+            hora_obj = datetime.strptime(nova_hora, "%H:%M").time()
         except ValueError:
             print("Formato de horario invalido.")
             conn.close()
@@ -231,7 +333,7 @@ def editar_reserva(id_reserva, alteracao):
 
     elif alteracao == "duracao":
         print("""
-========= TEMPO DE RECARGA =========
+========= TEMPO DE RESERVA =========
   [1] 15 minutos  - R$  12,50
   [2] 30 minutos  - R$  25,00
   [3] 45 minutos  - R$  37,50
@@ -245,7 +347,6 @@ def editar_reserva(id_reserva, alteracao):
             return None
         nova_info = OPCOES_DURACAO[opcao]["minutos"]
         novo_valor = OPCOES_DURACAO[opcao]["preco"]
-        campo = "duracao_minutos"
 
         cursor.execute(
             "UPDATE reservas SET duracao_minutos = ?, valor_estimado = ? WHERE id_reserva = ?",
@@ -255,15 +356,15 @@ def editar_reserva(id_reserva, alteracao):
         cursor.execute("SELECT * FROM reservas WHERE id_reserva = ?", (id_reserva,))
         reserva_atualizada = dict(cursor.fetchone())
         conn.close()
-        print("Reserva atualizada com sucesso!")
+        print("Reserva updated com sucesso!")
         return reserva_atualizada
 
     elif alteracao == "valor":
-        nova_info = float(input("Digite o novo valor estimado: "))
+        nova_info = float(input("Digite o novo valor estimado: ").strip())
         campo = "valor_estimado"
         
     elif alteracao == "consumo":
-        nova_info = float(input("Digite o consumo em kWh: "))
+        nova_info = float(input("Digite o consumo em kWh: ").strip())
         campo = "kwh_consumido"
         
     else:
@@ -285,6 +386,33 @@ def editar_reserva(id_reserva, alteracao):
     
     print("Reserva atualizada com sucesso!")
     return reserva_atualizada
+
+def finalizar_reserva(id_reserva):
+    conn = conectar()
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM reservas WHERE id_reserva = ?", (id_reserva,))
+    reserva = cursor.fetchone()
+
+    if not reserva:
+        print("Reserva nao encontrada.")
+        conn.close()
+        return False
+
+    if reserva["status_reserva"] == STATUS_CONCLUIDA:
+        print("Esta reserva ja foi finalizada anteriormente.")
+        conn.close()
+        return False
+
+    cursor.execute(
+        "UPDATE reservas SET status_reserva = ? WHERE id_reserva = ?",
+        (STATUS_CONCLUIDA, id_reserva)
+    )
+    conn.commit()
+    conn.close()
+    
+    print(f"Reserva {id_reserva} finalizada com sucesso!")
+    return True
 
 def deletar_reserva(id_reserva):
     conn = conectar()
@@ -322,11 +450,8 @@ def buscar_reserva_ativa_por_carregador(id_carregador):
     
     return dict(reserva) if reserva else None
 
-def carregador_esta_reservado(id_carregador):
-    return buscar_reserva_ativa_por_carregador(id_carregador) is not None
-
 def obter_comando_estado_carregador(id_carregador):
-    if carregador_esta_reservado(id_carregador):
+    if buscar_reserva_ativa_por_carregador(id_carregador) is not None:
         return f"RESERVED:{id_carregador}"
     return f"FREE:{id_carregador}"
 
@@ -339,7 +464,8 @@ def validar_liberacao_por_codigo(id_carregador, id_motorista, codigo_digitado, c
     if reserva["id_motorista"] != id_motorista:
         return False, "Este carregador esta reservado para outro usuario."
 
-    codigo_info = codigos_ativos.get(id_carregador)
+    id_normalizado = id_carregador.strip()
+    codigo_info = codigos_ativos.get(id_normalizado)
     if not codigo_info:
         return False, "Nenhum codigo ativo para este carregador."
 

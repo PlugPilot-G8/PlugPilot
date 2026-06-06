@@ -106,7 +106,7 @@ def popular_dados_teste(cursor):
         cursor.execute("""
             INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro)
             VALUES ('51123456', 'Carlos Empresario', 'empresario', '12345678000199', 'empresario@plugpilot.com', ?, '11999999999', '2026-06')
-        """, (criptografar_senha('Empresa@123'),))
+        """, (criptografar_senha('Empresario@123'),))
         
         cursor.execute("""
             INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro, latitude, longitude)

@@ -49,10 +49,8 @@ def menu_motorista(serial_service, id_usuario):
 
 def menu_reservas(serial_service, id_motorista):
     from ..managers.reserve_manager import (
-        reservar_carregador,
         visualizar_reserva,
-        editar_reserva,
-        deletar_reserva,
+        listar_reservas,
         validar_liberacao_por_codigo,
         obter_comando_estado_carregador
     )
@@ -69,85 +67,22 @@ def menu_reservas(serial_service, id_motorista):
         serial_service.enviar_comando(comando)
 
     while True:
+        print("\n------ Minhas Reservas ------")
+        listar_reservas(id_motorista)
         print("\n------ Gerenciar Reservas ------")
-        print("1. Criar Reserva")
-        print("2. Iniciar Recarga")
-        print("3. Visualizar Reserva")
-        print("4. Editar Reserva")
-        print("5. Deletar Reserva")
-        print("6. Voltar")
+        print("1. Visualizar Reserva")
+        print("2. Voltar")
         print("--------------------------------")
 
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            reserva = reservar_carregador(id_motorista)
-            if reserva and serial_service:
-                id_carregador = reserva["id_carregador"]
-                atualizar_status_carregador(id_carregador, "Reservado")
-                sincronizar_lcd(id_carregador, f"RESERVED:{id_carregador}")
-
+            id_reserva = input("ID da reserva: ")
+            visualizar_reserva(id_reserva, id_motorista, serial_service)
+            
         elif opcao == "2":
-            if not serial_service:
-                print("[SERIAL] Servico serial indisponivel.")
-                continue
-
-            id_carregador = input("Digite o ID do carregador: ").strip() or "chg_001"
-            codigo = input("Digite o codigo exibido no LCD: ").strip()
-
-            sucesso = serial_service.liberar_por_codigo(
-                id_carregador=id_carregador,
-                id_motorista=id_motorista,
-                codigo_digitado=codigo,
-                validar_liberacao_callback=validar_liberacao_por_codigo
-            )
-
-            if sucesso:
-                print("[PlugPilot] Carregador liberado.")
-            else:
-                print("[PlugPilot] Codigo incorreto, expirado ou reserva invalida.")
-
-        elif opcao == "3":
-            id_reserva = input("Digite o ID da reserva: ")
-            visualizar_reserva(id_reserva)
-
-        elif opcao == "4":
-            id_reserva = input("Digite o ID da reserva: ")
-
-            print("\nO que deseja alterar?")
-            print("1. Status")
-            print("2. Agendamento")
-            print("3. Duração")
-            print("4. Valor")
-            print("5. Consumo")
-
-            campo = input("Escolha: ")
-            reserva_atualizada = None
-
-            if campo == "1":
-                reserva_atualizada = editar_reserva(id_reserva, "status")
-            elif campo == "2":
-                reserva_atualizada = editar_reserva(id_reserva, "agendamento")
-            elif campo == "3":
-                reserva_atualizada = editar_reserva(id_reserva, "duracao")
-            elif campo == "4":
-                reserva_atualizada = editar_reserva(id_reserva, "valor")
-            elif campo == "5":
-                reserva_atualizada = editar_reserva(id_reserva, "consumo")
-            else:
-                print("Opção inválida.")
-
-            if reserva_atualizada:
-                sincronizar_lcd(reserva_atualizada["id_carregador"])
-
-        elif opcao == "5":
-            id_reserva = input("Digite o ID da reserva: ")
-            reserva_deletada = deletar_reserva(id_reserva)
-            if reserva_deletada:
-                sincronizar_lcd(reserva_deletada["id_carregador"])
-
-        elif opcao == "6":
             break
+
         else:
             print("Opção inválida.")
 
