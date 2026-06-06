@@ -1,144 +1,124 @@
-# DataBaseManager.py - Responsável por criar e carregar a base de dados do sistema.
+# database_manager.py - Gerenciamento e inicialização do banco de dados SQLite
 
-import json
+import sqlite3
+import os
 
-data = "src/data/database.json"
+DB_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data")
+DB_PATH = os.path.join(DB_DIR, "database.db")
 
-# Função para criar a base de dados inicial do sistema, com dados de exemplo para usuários, unidades, carregadores e reservas
-def criar_database():
-    dados = {
-        "usuarios": {
-            "usr_001": {
-                "id_usuario": "usr_001",
-                "nome": "Carlos Empresário",
-                "tipo_usuario": "empresario",
-                "documento": "12.345.678/0001-99",
-                "email": "empresa@gmail.com",
-                "senha": "empresa123",
-                "telefone": "+5511999998888",
-                "data_cadastro": "2026-01-15T10:30:00Z",
-                "coordenadas_atual": {
-                    "latitude": -23.561684,
-                    "longitude": -46.662083
-                },
-               
-            },
-            "usr_002": {
-                "id_usuario": "usr_002",
-                "nome": "Lucas Motorista",
-                "tipo_usuario": "motorista",
-                "documento": "123.456.789-00",
-                "email": "user@gmail.com",
-                "senha": "user1234",
-                "telefone": "+5511988887777",
-                "data_cadastro": "2026-02-10T14:22:00Z",
-                "coordenadas_atual": {
-                    "latitude": -23.561684,
-                    "longitude": -46.662083
-                },
-                "historico_reservas": [
-                    "res_901"
-                ]
-            }
-        },
+def conectar():
+    os.makedirs(DB_DIR, exist_ok=True)
+    
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.row_factory = sqlite3.Row
+    
+    return conn
 
-        "unidades": {
-            "und_001": {
-                "id_unidade": "und_001",
-                "id_dono": "usr_001",
-                "status": "Ativa",
-                "nome_unidade": "PlugPilot Station - Jardins",
-                "endereco_formatado": "Alameda Lorena, 1234 - Jardins, São Paulo - SP, 01424-001",
-                "coordenadas": {
-                    "latitude": -23.561684,
-                    "longitude": -46.662083
-                },
-                "horario_funcionamento": {
-                    "abertura": "07:30",
-                    "fechamento": "22:00",
-                    "funciona_fds": True
-                },
-                "avaliacao_media": 4.8
-            }
-        },
+def criar_tabelas():
+    conn = conectar()
+    cursor = conn.cursor()
 
-        "carregadores": {
-            "chg_001": {
-                "id_carregador": "chg_001",
-                "id_unidade": "und_001",
-                "modelo": "Volvo Wallbox Plus",
-                "fabricante": "Volvo",
-                "tipo_corrente": "AC",
-                "potencia_kw": 22.0,
-                "tipo_conector": "Tipo 2 (Europeu)",
-                "preco_por_kwh": 2.49,
-                "status_atual": "Disponivel",
-                "tipo_monitoramento": "hardware",
-                "id_hardware": "hw_001",
-                "ultima_manutencao": "2026-04-01",
-                "recursos": {
-                    "permite_reserva": True,
-                    "fila_virtual": True,
-                    "plug_and_charge": False
-                }
-            }, 
-            "chg_002": {
-                "id_carregador": "chg_002",
-                "id_unidade": "und_001",
-                "modelo": "Volvo Wallbox Plus",
-                "fabricante": "Volvo",
-                "tipo_corrente": "AC",
-                "potencia_kw": 22.0,
-                "tipo_conector": "Tipo 2 (Europeu)",
-                "preco_por_kwh": 2.49,
-                "status_atual": "Disponivel",
-                "tipo_monitoramento": "manual",
-                "id_hardware": None,
-                "ultima_manutencao": "2026-04-01",
-                "recursos": {
-                    "permite_reserva": True,
-                    "fila_virtual": True,
-                    "plug_and_charge": False
-                }
-            }
-        },
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id_usuario TEXT PRIMARY KEY,
+        nome TEXT NOT NULL,
+        tipo_usuario TEXT NOT NULL CHECK(tipo_usuario IN ('empresario', 'motorista')),
+        documento TEXT,
+        email TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        telefone TEXT,
+        data_cadastro TEXT,
+        latitude REAL,
+        longitude REAL
+    );
+    """)
 
-        "reservas": {
-            "res_901": {
-                "id_reserva": "res_901",
-                "id_motorista": "usr_002",
-                "id_unidade": "und_001",
-                "id_carregador": "chg_001",
-                "status_reserva": "Concluida",
-                "agendado_para": "2026-05-21T16:00:00Z",
-                "duracao_minutos": 60,
-                "valor_estimado": 45.80,
-                "kwh_consumido": 18.4
-            }
-        }
-    }
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS unidades (
+        id_unidade TEXT PRIMARY KEY,
+        id_dono TEXT NOT NULL,
+        status TEXT NOT NULL,
+        nome_unidade TEXT NOT NULL,
+        endereco_formatado TEXT,
+        latitude REAL,
+        longitude REAL,
+        abertura TEXT,
+        fechamento TEXT,
+        funciona_fds INTEGER CHECK(funciona_fds IN (0, 1)), -- 0=False, 1=True
+        avaliacao_media REAL,
+        FOREIGN KEY(id_dono) REFERENCES usuarios(id_usuario) ON DELETE RESTRICT
+    );
+    """)
 
-    with open(data, "w", encoding="utf-8") as arquivo:
-        json.dump(dados, arquivo, indent=4, ensure_ascii=False)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS carregadores (
+        id_carregador TEXT PRIMARY KEY,
+        id_unidade TEXT NOT NULL,
+        modelo TEXT,
+        fabricante TEXT,
+        tipo_corrente TEXT CHECK(tipo_corrente IN ('AC', 'DC')),
+        potencia_kw REAL,
+        tipo_conector TEXT,
+        preco_por_kwh REAL,
+        status_atual TEXT NOT NULL,
+        tipo_monitoramento TEXT CHECK(tipo_monitoramento IN ('hardware', 'manual')),
+        id_hardware TEXT,
+        ultima_manutencao TEXT,
+        permite_reserva INTEGER CHECK(permite_reserva IN (0, 1)),
+        fila_virtual INTEGER CHECK(fila_virtual IN (0, 1)),
+        plug_and_charge INTEGER CHECK(plug_and_charge IN (0, 1)),
+        FOREIGN KEY(id_unidade) REFERENCES unidades(id_unidade) ON DELETE CASCADE
+    );
+    """)
 
-    print("Banco inicial criado com sucesso!")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS reservas (
+        id_reserva TEXT PRIMARY KEY,
+        id_motorista TEXT NOT NULL,
+        id_unidade TEXT NOT NULL,
+        id_carregador TEXT NOT NULL,
+        status_reserva TEXT NOT NULL,
+        agendado_para TEXT NOT NULL,
+        duracao_minutos INTEGER NOT NULL,
+        valor_estimado REAL,
+        kwh_consumido REAL,
+        FOREIGN KEY(id_motorista) REFERENCES usuarios(id_usuario) ON DELETE RESTRICT,
+        FOREIGN KEY(id_unidade) REFERENCES unidades(id_unidade) ON DELETE RESTRICT,
+        FOREIGN KEY(id_carregador) REFERENCES carregadores(id_carregador) ON DELETE RESTRICT
+    );
+    """)
 
-# Função para carregar o banco de dados do sistema, criando um novo banco caso o arquivo não exista ou esteja corrompido
-def carregar_database():
-    try:
-        with open(data, "r", encoding="utf-8") as arquivo:
-            dados = json.load(arquivo)
-        return dados
-    except FileNotFoundError:
-        print("Arquivo de banco de dados não encontrado. Criando um novo banco...")
-        criar_database()
-        return carregar_database()
-    except json.JSONDecodeError:
-        print("Erro ao decodificar o arquivo de banco de dados. Criando um novo banco...")
-        criar_database()
-        return carregar_database()
+    conn.commit()
+    
+    popular_dados_teste(cursor)
+    
+    conn.commit()
+    conn.close()
 
-# Função para atualizar o banco de dados com as alterações realizadas no sistema
-def atualizar_database(dados):
-    with open(data, "w", encoding="utf-8") as arquivo:
-        json.dump(dados, arquivo, indent=4, ensure_ascii=False)
+def popular_dados_teste(cursor):
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    if cursor.fetchone()[0] == 0:
+        print("[DB] Banco de dados vazio. Injetando logins e dados base de teste...")
+        
+        cursor.execute("""
+            INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro)
+            VALUES ('51123456', 'Carlos Empresario', 'empresario', '12345678000199', 'empresario@plugpilot.com', 'Admin@123', '11999999999', '2026-06-05')
+        """)
+        
+        cursor.execute("""
+            INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro, latitude, longitude)
+            VALUES ('52123456', 'Lucas Motorista', 'motorista', '12345678900', 'motorista@gmail.com', 'User@123', '11988888888', '2026-06-05', -23.55052, -46.633309)
+        """)
+        
+        cursor.execute("""
+            INSERT INTO unidades (id_unidade, id_dono, status, nome_unidade, endereco_formatado, latitude, longitude, abertura, fechamento, funciona_fds, avaliacao_media)
+            VALUES ('31123456', '51123456', 'ativa', 'Eletroposto Central', 'Av. Paulista, 1000 - São Paulo, Brazil', -23.561414, -46.655881, '06:00', '22:00', 1, 4.8)
+        """)
+        
+        cursor.execute("""
+            INSERT INTO carregadores (id_carregador, id_unidade, modelo, fabricante, tipo_corrente, potencia_kw, tipo_conector, preco_por_kwh, status_atual, tipo_monitoramento, id_hardware, permite_reserva, fila_virtual, plug_and_charge)
+            VALUES ('chg_001', '31123456', 'FastCharge v2', 'Volvo', 'DC', 50.0, 'CCS2', 1.99, 'FREE', 'hardware', 'HARDWARE_CHG001', 1, 0, 1)
+        """)
+        
+        print("[DB] Logins e instâncias base criados com sucesso!")

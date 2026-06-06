@@ -1,17 +1,17 @@
+# motorista_ui.py - Interface do Motorista e Gerenciamento de Reservas via SQLite
+
+from .geral_ui import menu_principal
+from ..managers.database_manager import conectar
+
 def menu_motorista(serial_service, id_usuario):
-    from .geral_ui import menu_principal
     from ..managers.unit_manager import listar_unidades_proximas, listar_unidade
-    from ..managers.database_manager import carregar_database
-    
-    dados = carregar_database()
     
     if not id_usuario:
         print("ID do motorista não fornecido. Retornando ao menu principal.")
-        menu_principal(serial_service)
         return
     
     while True:
-        print("------ Menu do Motorista ------")
+        print("\n------ Menu do Motorista ------")
         listar_unidades_proximas(id_usuario)
         print("------------------------------")
         print("1. Visualizar Unidade")
@@ -22,22 +22,26 @@ def menu_motorista(serial_service, id_usuario):
         opcao = input("Escolha uma opção: ")
 
         if opcao == "1":
-            unidades = dados.get("unidades", {})
+            nome_unidade = input("Unidade que deseja visualizar: ").strip()
+            
+            conn = conectar()
+            cursor = conn.cursor()
+            cursor.execute("SELECT id_unidade FROM unidades WHERE LOWER(nome_unidade) = LOWER(?)", (nome_unidade,))
+            row = cursor.fetchone()
+            conn.close()
 
-            nome_unidade = input("Unidade que deseja visualizar: ")
-                
-            id_unidade = next((id for id, unidade in unidades.items() if unidade["nome_unidade"] == nome_unidade), None)
-            if id_unidade:
-                listar_unidade(id_usuario, id_unidade, serial_service)
+            if row:
+                listar_unidade(id_usuario, row["id_unidade"], serial_service)
             else:
-                    print("Unidade não encontrada.")
+                print("Unidade não encontrada.")
+                
         elif opcao == "2":
             menu_reservas(serial_service, id_usuario)
         elif opcao == "3":
-            menu_principal(serial_service)
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
+
 
 def menu_reservas(serial_service, id_motorista):
     from ..managers.reserve_manager import (
@@ -48,7 +52,7 @@ def menu_reservas(serial_service, id_motorista):
         validar_liberacao_por_codigo,
         obter_comando_estado_carregador
     )
-    from ..managers.chager_manager import atualizar_status_carregador
+    from ..managers.charger_manager import atualizar_status_carregador
 
     def sincronizar_lcd(id_carregador, comando=None):
         if not serial_service:
@@ -74,7 +78,6 @@ def menu_reservas(serial_service, id_motorista):
 
         if opcao == "1":
             reserva = reservar_carregador(id_motorista)
-
             if reserva and serial_service:
                 id_carregador = reserva["id_carregador"]
                 atualizar_status_carregador(id_carregador, "Reservado")
@@ -115,7 +118,6 @@ def menu_reservas(serial_service, id_motorista):
             print("5. Consumo")
 
             campo = input("Escolha: ")
-
             reserva_atualizada = None
 
             if campo == "1":
@@ -137,41 +139,39 @@ def menu_reservas(serial_service, id_motorista):
         elif opcao == "5":
             id_reserva = input("Digite o ID da reserva: ")
             reserva_deletada = deletar_reserva(id_reserva)
-
             if reserva_deletada:
                 sincronizar_lcd(reserva_deletada["id_carregador"])
 
         elif opcao == "6":
             break
-
         else:
             print("Opção inválida.")
 
 def unidades_disponiveis():
     from ..managers.unit_manager import visualizar_unidade
-    from ..managers.database_manager import carregar_database
     
-    dados = carregar_database()
-    
-    unidades = dados.get("unidades")
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id_unidade, nome_unidade FROM unidades WHERE LOWER(status) = 'ativa'")
+    unidades = cursor.fetchall()
+    conn.close()
 
-    print("------Estações disponiveis------")
+    print("\n------ Estações Disponíveis ------")
     if not unidades:
-            print("Nenhuma unidade cadastrada.")
-            return
-    for i in range(len(unidades)):
-        unidade_id = list(unidades.keys())[i]
-        unidade = unidades.get(unidade_id)
-        nome = unidade.get("nome_unidade")
-        print(f"{i+1}.", nome)
+        print("Nenhuma unidade ativa encontrada.")
+        return
+
+    for idx, unidade in enumerate(unidades):
+        print(f"{idx + 1}. {unidade['nome_unidade']}")
     print("--------------------------------")
 
-    opcao = int(input("Escolha o que você deseja: "))
-
-    unidade_id = list(unidades.keys())[opcao - 1]
-
-    unidade_escolhida = unidades[unidade_id]
-
-    print("Você escolheu:", unidade_escolhida["nome_unidade"])
-
-    visualizar_unidade(unidade_escolhida["id_unidade"])
+    try:
+        opcao = int(input("Escolha o que você deseja: "))
+        if 1 <= opcao <= len(unidades):
+            unidade_escolhida = unidades[opcao - 1]
+            print("Você escolheu:", unidade_escolhida["nome_unidade"])
+            visualizar_unidade(unidade_escolhida["id_unidade"])
+        else:
+            print("Opção fora do intervalo disponível.")
+    except ValueError:
+        print("Por favor, digite um número válido.")

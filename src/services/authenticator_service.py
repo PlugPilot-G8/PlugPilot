@@ -1,19 +1,15 @@
-# authenticator_service.py - Autenticacao de usuarios do sistema.
+# authenticator_service.py - Autenticacao de usuarios do sistema via SQLite.
 
 from ..validators.validator import validar_email, validar_cpf, validar_cnpj, validar_senha
-from ..managers.database_manager import carregar_database
+from ..managers.database_manager import conectar
 
 def _somente_digitos(valor):
     return "".join(filter(str.isdigit, valor))
 
-# Função para realizar o login de um usuário
 def login(tipo_usuario, serial_service):
     from ..ui.motorista_ui import menu_motorista
     from ..ui.empresario_ui import menu_empresario
     
-    dados = carregar_database()
-    usuarios = dados.get("usuarios", {})
-
     while True:
         email = input("Email: ").strip()
         if validar_email(email):
@@ -44,15 +40,25 @@ def login(tipo_usuario, serial_service):
 
     documento_informado = _somente_digitos(documento)
 
-    for usuario in usuarios.values():
-        documento_banco = _somente_digitos(usuario.get("documento", ""))
+    conn = conectar()
+    cursor = conn.cursor()
 
-        if (
-            usuario.get("tipo_usuario") == tipo_usuario
-            and usuario.get("email", "").lower() == email.lower()
-            and usuario.get("senha") == senha
-            and documento_banco == documento_informado
-        ):
+    cursor.execute("""
+        SELECT * FROM usuarios 
+        WHERE LOWER(email) = LOWER(?) 
+          AND senha = ? 
+          AND tipo_usuario = ?
+    """, (email, senha, tipo_usuario))
+    
+    usuario_row = cursor.fetchone()
+    conn.close()
+
+    if usuario_row:
+        documento_banco = _somente_digitos(usuario_row["documento"] if usuario_row["documento"] is not None else "")
+        
+        if documento_banco == documento_informado:
+            usuario = dict(usuario_row)
+            
             try:
                 from .service import obter_localizacao_usuario
                 obter_localizacao_usuario(usuario["id_usuario"])

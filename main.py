@@ -1,26 +1,30 @@
-# main.py - Responsável por iniciar o sistema e criar a base de dados, se necessário.
+# main.py - Responsável por iniciar o sistema e criar a base de dados SQLite se necessário.
 
 import threading
+import sys
+import os
 
-from src.managers.database_manager import carregar_database
-from src.managers.chager_manager import atualizar_status_por_hardware
-from src.managers.reserve_manager import obter_comando_estado_carregador # <-- Pegamos a sua função aqui
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+from src.managers.database_manager import criar_tabelas
+from src.managers.charger_manager import atualizar_status_por_hardware
+from src.managers.reserve_manager import obter_comando_estado_carregador
 from src.services.serial_service import SerialService
-from src.services.service import obter_localizacao_usuario
 from src.ui.geral_ui import menu_principal
 
 PORTA_ARDUINO = "COM10"
 BAUD_RATE = 9600
 
 if __name__ == "__main__":
-    print("[MAIN] Inicializando Sistema...")
+    print("[MAIN] Inicializando Sistema PlugPilot...")
 
     try:
-        carregar_database()
+        criar_tabelas()
+        print("[MAIN] Banco de dados SQLite verificado/criado com sucesso.")
     except Exception as erro:
-        print(f"[MAIN] Erro ao carregar o banco de dados: {erro}")
+        print(f"[MAIN] Erro crítico ao inicializar o banco de dados SQLite: {erro}")
+        sys.exit(1)
 
-    # Ajustamos a assinatura com os seus dois callbacks corretos do projeto
     serial_service = SerialService(
         porta=PORTA_ARDUINO,
         baud_rate=BAUD_RATE,
@@ -31,11 +35,9 @@ if __name__ == "__main__":
     serial_service.conectar()
 
     thread_serial = threading.Thread(
-        target=serial_service.escutar, # Ajustado para o nome do seu método que é escutar
+        target=serial_service.escutar,
         daemon=True
     )
-
     thread_serial.start()
 
-    # Passamos a instância criada para os menus conseguirem interagir com o Arduino
     menu_principal(serial_service)

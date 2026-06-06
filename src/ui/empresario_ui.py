@@ -2,13 +2,12 @@ from .geral_ui import menu_principal
 
 def menu_empresario(serial_service, id_usuario):
     if not id_usuario:
-        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        print("ID do empresário não fornecido. Retornando ao menu principal.")
         menu_principal(serial_service)
         return
     
     while True:
-        
-        print("------ Menu do Empresário ------")
+        print("\n------ Menu do Empresário ------")
         print("1. Gerenciar Unidades")
         print("2. Ver Dashboard")
         print("3. Sair")
@@ -27,25 +26,27 @@ def menu_empresario(serial_service, id_usuario):
             print("Opção inválida. Por favor, tente novamente.")
 
 def menu_dashboard_empresario(serial_service, id_usuario):
-    from ..services.dashboard import (
+    from ..services.serial_service import (
         dashboard_empresario, 
         horarios_de_pico, 
         unidades_ativas, 
         relatorio_carregadores, 
         reservas_hoje,
-        receita_estimada_mes)
+        receita_estimada_mes
+    )
     
     if not id_usuario:
-        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        print("ID do empresário não fornecido. Retornando ao menu principal.")
         menu_principal(serial_service)
         return
     
     while True:
-        print("------ Dashboard do Empresário ------")
+        print("\n------ Dashboard do Empresário ------")
         print(f"Unidades ativas: {unidades_ativas(id_usuario)}")
         relatorio_carregadores(id_usuario)
-        print(f"Reservas hoje: {reservas_hoje()}")
+        print(f"Reservas hoje: {reservas_hoje(id_usuario)}")
         print(f"Receita estimada: R$ {receita_estimada_mes(id_usuario):.2f}")
+        print("-------------------------------------")
         print("1. Taxa de Ocupação Semanal")
         print("2. Horários de Pico")
         print("3. Voltar")
@@ -55,33 +56,31 @@ def menu_dashboard_empresario(serial_service, id_usuario):
 
         if opcao == "1":
             print("Exibindo Taxa de Uso Semanal...")
-            dashboard_empresario()
+            dashboard_empresario(id_usuario)
         elif opcao == "2":
             print("Exibindo Horários de Pico...")
-            horarios_de_pico()
+            horarios_de_pico(id_usuario)
         elif opcao == "3":
             return
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
 def gerenciar_unidades(serial_service, id_usuario): 
-    from ..managers.database_manager import carregar_database
     from ..managers.unit_manager import (
         cadastrar_unidade, 
-        editar_unidade, 
         listar_unidades, 
-        deletar_unidade,
-        listar_unidade)
+        listar_unidade,
+    )
+    
+    from ..managers.database_manager import conectar
     
     if not id_usuario:
-        print("ID do motorista não fornecido. Retornando ao menu principal.")
+        print("ID do empresário não fornecido. Retornando ao menu principal.")
         menu_principal(serial_service)
         return
     
-    dados = carregar_database()
-    
     while True:
-        print("------ Suas Unidades ------")
+        print("\n------ Suas Unidades ------")
         listar_unidades(id_usuario)
         print("--------------------------------")
         print("1. Visualizar Unidade")
@@ -93,15 +92,22 @@ def gerenciar_unidades(serial_service, id_usuario):
         
         try:
             if opcao == "1":
-                unidades = dados.get("unidades", {})
-
-                nome_unidade = input("Unidade que deseja visualizar: ")
+                nome_unidade = input("Unidade que deseja visualizar: ").strip()
                 
-                id_unidade = next((id for id, unidade in unidades.items() if unidade["nome_unidade"] == nome_unidade), None)
-                if id_unidade:
-                    listar_unidade(id_usuario, id_unidade)
+                conn = conectar()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "SELECT id_unidade FROM unidades WHERE nome_unidade = ? AND id_dono = ?", 
+                    (nome_unidade, id_usuario)
+                )
+                row = cursor.fetchone()
+                conn.close()
+
+                if row:
+                    listar_unidade(id_usuario, row["id_unidade"])
                 else:
-                    print("Unidade não encontrada.")
+                    print("Unidade não encontrada ou não pertence a você.")
+                    
             elif opcao == "2":
                 cadastrar_unidade(id_usuario)
             elif opcao == "3":
