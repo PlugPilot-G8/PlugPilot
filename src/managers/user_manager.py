@@ -2,6 +2,7 @@
 
 from .database_manager import conectar
 from ..validators.validator import validar_nome, validar_email, validar_senha, validar_cpf, validar_cnpj, validar_telefone
+from ..validators.validator import criptografar_senha
 from ..services.service import gerar_id
 from datetime import datetime
 import sqlite3
@@ -60,7 +61,7 @@ def cadastrar_usuario(tipo_usuario):
             INSERT INTO usuarios (
                 id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro))
+        """, (id_usuario, nome, tipo_usuario, documento, email, criptografar_senha(senha), telefone, data_cadastro))
         conn.commit()
         print("Usuário cadastrado com sucesso!")
     except sqlite3.IntegrityError:
@@ -139,7 +140,7 @@ def atualizar_usuario(id_usuario, alteracao):
     
     elif alteracao == "senha":
         nova_info = input("Digite uma nova senha: ")
-        if usuario["senha"] == nova_info:
+        if usuario["senha"] == criptografar_senha(nova_info):
             print("Escolha uma senha diferente da atual")
             conn.close()
             return

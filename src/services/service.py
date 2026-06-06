@@ -6,7 +6,6 @@ import geocoder
 from datetime import datetime
 from ..managers.database_manager import conectar
 
-# Geradores de ID para diferentes tipos de entidades no sistema.
 TIPOS = {
     "carregador": (0, 30),
     "unidade": (31, 50),
@@ -14,7 +13,6 @@ TIPOS = {
     "reserva": (71, 99)
 }
 
-# Função para gerar IDs únicos para diferentes tipos de entidades no sistema
 def gerar_id(tipo):
     if tipo not in TIPOS:
         raise ValueError("Tipo inválido")
@@ -25,17 +23,16 @@ def gerar_id(tipo):
 
     return f"{prefixo:02}{horario}"
 
-# Função para buscar informações de endereço e coordenadas com base no CEP fornecido
 def buscar_cep_info(cep):
     cep_limpo = "".join(filter(str.isdigit, str(cep)))
     
-    # Valores padrão caso a busca falhe ou o CEP seja inválido
+
     endereco_formatado = f"Endereço para o CEP {cep} (informação não disponível)"
-    latitude, longitude = -23.550520, -46.633309 # Centro de São Paulo
+    latitude, longitude = -23.550520, -46.633309
     
     if len(cep_limpo) == 8:
         try:
-            # Busca o endereço real
+
             url_viacep = f"https://viacep.com.br/ws/{cep_limpo}/json/"
             resposta_cep = requests.get(url_viacep, timeout=5)
             dados_cep = resposta_cep.json() if hasattr(resposta_cep, 'json') else resposta_cep.json()
@@ -85,7 +82,6 @@ def obter_localizacao_usuario(id_usuario):
     if g.latlng:
         lat_detectada, lng_detectada = g.latlng
         
-        # Executa o UPDATE cirúrgico na tabela de usuários
         cursor.execute("""
             UPDATE usuarios 
             SET latitude = ?, longitude = ? 

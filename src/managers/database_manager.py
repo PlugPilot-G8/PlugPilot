@@ -97,19 +97,21 @@ def criar_tabelas():
     conn.close()
 
 def popular_dados_teste(cursor):
+    from ..validators.validator import criptografar_senha
+    
     cursor.execute("SELECT COUNT(*) FROM usuarios")
     if cursor.fetchone()[0] == 0:
         print("[DB] Banco de dados vazio. Injetando logins e dados base de teste...")
         
         cursor.execute("""
             INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro)
-            VALUES ('51123456', 'Carlos Empresario', 'empresario', '12345678000199', 'empresario@plugpilot.com', 'Admin@123', '11999999999', '2026-06-05')
-        """)
+            VALUES ('51123456', 'Carlos Empresario', 'empresario', '12345678000199', 'empresario@plugpilot.com', ?, '11999999999', '2026-06')
+        """, (criptografar_senha('Empresa@123'),))
         
         cursor.execute("""
             INSERT INTO usuarios (id_usuario, nome, tipo_usuario, documento, email, senha, telefone, data_cadastro, latitude, longitude)
-            VALUES ('52123456', 'Lucas Motorista', 'motorista', '12345678900', 'motorista@gmail.com', 'User@123', '11988888888', '2026-06-05', -23.55052, -46.633309)
-        """)
+            VALUES ('52123456', 'Lucas Motorista', 'motorista', '12345678900', 'motorista@gmail.com', ?, '11988888888', '2026-06-05', -23.55052, -46.633309)
+        """, (criptografar_senha('Motorista@123'),))
         
         cursor.execute("""
             INSERT INTO unidades (id_unidade, id_dono, status, nome_unidade, endereco_formatado, latitude, longitude, abertura, fechamento, funciona_fds, avaliacao_media)
