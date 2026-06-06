@@ -1,10 +1,12 @@
+# service.py - Utilitários, geolocalização e serviços do sistema via SQLite
+
 import random
 import requests
 import geocoder
 from datetime import datetime
-from ..managers.database_manager import carregar_database, atualizar_database
+from ..managers.database_manager import conectar
 
-#Geradores de ID para diferentes tipos de entidades no sistema.
+# Geradores de ID para diferentes tipos de entidades no sistema.
 TIPOS = {
     "carregador": (0, 30),
     "unidade": (31, 50),
@@ -36,6 +38,7 @@ def buscar_cep_info(cep):
             # Busca o endereço real
             url_viacep = f"https://viacep.com.br/ws/{cep_limpo}/json/"
             resposta_cep = requests.get(url_viacep, timeout=5)
+            dados_cep = resposta_cep.json() if hasattr(resposta_cep, 'json') else resposta_cep.json()
             dados_cep = resposta_cep.json()
             
             if "erro" not in dados_cep:
@@ -46,7 +49,6 @@ def buscar_cep_info(cep):
                 
                 endereco_formatado = f"{logradouro}, {bairro}, {cidade} - {estado}, Brazil"
                 
-                # Busca as coordenadas reais
                 url_nominatim = "https://nominatim.openstreetmap.org/search"
                 parametros = {"q": endereco_formatado, "format": "json", "limit": 1}
                 headers = {"User-Agent": "ProjetoFaculdadeJunho2026/1.0 (teste@faculdade.edu)"}
@@ -58,10 +60,8 @@ def buscar_cep_info(cep):
                     latitude = float(dados_geo[0]["lat"])
                     longitude = float(dados_geo[0]["lon"])
         except Exception:
-            # Em caso de qualquer erro, os valores padrão serão usados.
             pass
 
-    # Retorna o endereço formatado e as coodernadas
     return {
         "endereco_formatado": endereco_formatado,
         "coordenadas": {
@@ -71,23 +71,29 @@ def buscar_cep_info(cep):
     }
 
 def obter_localizacao_usuario(id_usuario):
-    banco_dados = carregar_database()
+    conn = conectar()
+    cursor = conn.cursor()
     
-    if id_usuario not in banco_dados.get("usuarios", {}):
+    cursor.execute("SELECT COUNT(*) FROM usuarios WHERE id_usuario = ?", (id_usuario,))
+    if cursor.fetchone()[0] == 0:
         print(f"[ERRO] Usuário {id_usuario} não encontrado no banco de dados.")
+        conn.close()
         return
 
-    usuario = banco_dados["usuarios"][id_usuario]
-    
     g = geocoder.ip('me')
     
     if g.latlng:
         lat_detectada, lng_detectada = g.latlng
         
-        usuario.setdefault("coordenadas_atual", {})
-        usuario["coordenadas_atual"]["latitude"] = lat_detectada
-        usuario["coordenadas_atual"]["longitude"] = lng_detectada
+        # Executa o UPDATE cirúrgico na tabela de usuários
+        cursor.execute("""
+            UPDATE usuarios 
+            SET latitude = ?, longitude = ? 
+            WHERE id_usuario = ?
+        """, (lat_detectada, lng_detectada, id_usuario))
         
-        atualizar_database(banco_dados)
+        conn.commit()
     else:
-        print("\n[AVISO] Falha ao rastrear IP. Mantendo coordenadas padrões do JSON.")
+        print("\n[AVISO] Falha ao rastrear IP. Mantendo coordenadas padrões do Banco.")
+        
+    conn.close()

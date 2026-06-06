@@ -1,12 +1,11 @@
-from ..managers.database_manager import carregar_database 
+# geral_ui.py - Menu Principal e Navegação de Fluxo do Sistema
+
 from ..managers.user_manager import cadastrar_usuario
 from ..services.authenticator_service import login
 
-dados = carregar_database()
-
 def menu_principal(serial_service=None):
     while True:
-        print("------ Menu Principal - PlugPilot! ------")
+        print("\n------ Menu Principal - PlugPilot! ------")
         print("1. Login")
         print("2. Cadastrar")
         print("3. Sair")
@@ -19,13 +18,14 @@ def menu_principal(serial_service=None):
         elif opcao == "2":
             cadastro_menu(serial_service)
         elif opcao == "3":
+            print("Saindo do PlugPilot!... Até logo!")
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
 def login_menu(serial_service=None):
     while True:
-        print("------ Menu de Login ------")
+        print("\n------ Menu de Login ------")
         print("1. Login Empresário")
         print("2. Login Motorista")
         print("3. Voltar ao Menu Principal")
@@ -40,14 +40,13 @@ def login_menu(serial_service=None):
             login("motorista", serial_service)
             return
         elif opcao == "3":
-            menu_principal(serial_service)
-            break
+            break 
         else:
             print("Opção inválida. Por favor, tente novamente.")
 
 def cadastro_menu(serial_service=None):
     while True:
-        print("------ Menu de Cadastro ------")
+        print("\n------ Menu de Cadastro ------")
         print("1. Cadastrar Empresário")
         print("2. Cadastrar Motorista")
         print("3. Voltar ao Menu Principal")
@@ -62,7 +61,6 @@ def cadastro_menu(serial_service=None):
             cadastrar_usuario("motorista")
             return
         elif opcao == "3":
-            menu_principal(serial_service)
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
