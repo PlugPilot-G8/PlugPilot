@@ -16,7 +16,8 @@ def menu_motorista(serial_service, id_usuario):
         print("------------------------------")
         print("1. Visualizar Unidade")
         print("2. Gerenciar Reservas")
-        print("3. Sair")
+        print("3. Visualizar Perfil")
+        print("4. Sair")
         print("------------------------------")
 
         opcao = input("Escolha uma opção: ")
@@ -38,6 +39,9 @@ def menu_motorista(serial_service, id_usuario):
         elif opcao == "2":
             menu_reservas(serial_service, id_usuario)
         elif opcao == "3":
+            from ..managers.user_manager import visualizar_usuario
+            visualizar_usuario(id_usuario)      
+        elif opcao == "4":
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")

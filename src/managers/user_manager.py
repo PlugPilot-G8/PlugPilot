@@ -69,7 +69,7 @@ def cadastrar_usuario(tipo_usuario):
     finally:
         conn.close()
 
-def atualizar_usuario(id_usuario, alteracao):
+def editar_usuario(id_usuario, alteracao):
     conn = conectar()
     cursor = conn.cursor()
 
@@ -176,6 +176,8 @@ def atualizar_usuario(id_usuario, alteracao):
         conn.close()
 
 def visualizar_usuario(id_usuario):
+    from ..ui.geral_ui import menu_principal 
+
     conn = conectar()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM usuarios WHERE id_usuario = ?", (id_usuario,))
@@ -193,6 +195,56 @@ def visualizar_usuario(id_usuario):
     print('Documento: ', usuario['documento'])
     print('Telefone: ', usuario['telefone'])
     print("\n============================")
+
+    while True:
+        print("1. Editar Perfil")
+        print("2. Deletar Perfil")
+        print("3. Voltar")
+
+        opcao = input("Escolha uma opção: ")
+
+        
+        if opcao == "1":
+            while True:
+                print("\nQuais dados deseja editar?")
+                print("1. Nome")
+                print("2. Documento")
+                print("3. Email")
+                print("4. Senha")
+                print("5. Telefone")
+                print("6. Voltar")
+
+                alteracao = input("Escolha uma opção: ")
+
+                if alteracao in ["1", "2", "3", "4", "5"]:
+                    campos = {
+                        "1": "nome",
+                        "2": "documento",
+                        "3": "email",
+                        "4": "senha",
+                        "5": "telefone"
+                    }
+                    editar_usuario(id_usuario, campos[alteracao])
+                elif alteracao == "6":
+                    break
+                else:
+                    print("Opção inválida. Por favor, tente novamente.")
+        elif opcao == "2":
+            while True:
+                confirmacao = input("Tem certeza que deseja deletar seu perfil? Esta ação é irreversível. (s/n): ")
+                if confirmacao.lower() == "s":
+                    deletar_usuario(id_usuario)
+                    menu_principal(None)
+                    return
+                elif confirmacao.lower() == "n":
+                    print("Operação de deleção cancelada.")
+                    break
+                else:
+                    print("Opção inválida. Por favor, digite 's' para sim ou 'n' para não.")
+        elif opcao == "3":
+            return    
+        else:
+            print("Opção inválida. Por favor, tente novamente.")        
 
 def deletar_usuario(id_usuario):
     conn = conectar()

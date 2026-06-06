@@ -10,7 +10,8 @@ def menu_empresario(serial_service, id_usuario):
         print("\n------ Menu do Empresário ------")
         print("1. Gerenciar Unidades")
         print("2. Ver Dashboard")
-        print("3. Sair")
+        print("3. Visualizar Perfil")
+        print("4. Sair")
         print("-------------------------------")
 
         opcao = input("Escolha uma opção: ")
@@ -20,7 +21,9 @@ def menu_empresario(serial_service, id_usuario):
         elif opcao == "2":
             menu_dashboard_empresario(serial_service, id_usuario)
         elif opcao == "3":
-            menu_principal(serial_service)
+            from ..managers.user_manager import visualizar_usuario
+            visualizar_usuario(id_usuario)
+        elif opcao == "4":
             break
         else:
             print("Opção inválida. Por favor, tente novamente.")
