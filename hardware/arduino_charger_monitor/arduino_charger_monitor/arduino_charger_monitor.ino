@@ -11,14 +11,14 @@ const int RELAY_ON_STATE = LOW;
 const int RELAY_OFF_STATE = HIGH;
 
 const int RED_PIN = 3;
-const int YELLOW_PIN = 5;
+const int YELLOW_PIN = 4;
 const int GREEN_PIN = 7;
 
 const unsigned long CODE_INTERVAL = 60000;
 const unsigned long READY_INTERVAL = 3000;
 const unsigned long BUTTON_DEBOUNCE = 50;
 
-const int BUTTON_ACTIVE_STATE = HIGH;
+const int BUTTON_ACTIVE_STATE = LOW;
 
 bool authorized = false;
 bool reserved = false;
@@ -32,8 +32,8 @@ unsigned long lastCodeTime = 0;
 unsigned long lastReadyTime = 0;
 unsigned long lastButtonChangeTime = 0;
 
-int lastButtonReading = LOW;
-int stableButtonState = LOW;
+int lastButtonReading = HIGH;
+int stableButtonState = HIGH;
 
 String currentScreenLine1 = "";
 String currentScreenLine2 = "";
@@ -308,7 +308,7 @@ void setup()
 
     digitalWrite(RELAY_PIN, RELAY_OFF_STATE);
     pinMode(RELAY_PIN, OUTPUT);
-    pinMode(BUTTON_PIN, INPUT);
+    pinMode(BUTTON_PIN, INPUT_PULLUP);
     pinMode(RED_PIN, OUTPUT);
     pinMode(GREEN_PIN, OUTPUT);
     pinMode(YELLOW_PIN, OUTPUT);
