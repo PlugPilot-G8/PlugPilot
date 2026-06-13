@@ -5,10 +5,10 @@ from ..services.service import gerar_id
 import sqlite3
 
 STATUS_ARDUINO_PARA_SISTEMA = {
-    "FREE": "Disponivel",
-    "RESERVED": "Reservado",
-    "IN_USE": "Ocupado",
-    "LOCKED": "Reservado",
+    "FREE": "FREE",
+    "RESERVED": "RESERVED",
+    "IN_USE": "IN_USE",
+    "LOCKED": "RESERVED",
 }
 
 def buscar_id(nome_carregador, id_unidade):
@@ -25,10 +25,21 @@ def buscar_id(nome_carregador, id_unidade):
 def buscar_carregador_por_identificador(identificador):
     conn = conectar()
     cursor = conn.cursor()
-    
+
+    identificador_normalizado = (
+        identificador.strip()
+        .upper()
+        .replace("HARDWARE_", "")
+        .replace("_", "")
+    )
+
     cursor.execute(
-        "SELECT * FROM carregadores WHERE id_carregador = ? OR id_hardware = ?",
-        (identificador, identificador)
+        """
+        SELECT * FROM carregadores
+        WHERE UPPER(REPLACE(REPLACE(id_carregador, 'HARDWARE_', ''), '_', '')) = ?
+           OR UPPER(REPLACE(REPLACE(id_hardware, 'HARDWARE_', ''), '_', '')) = ?
+        """,
+        (identificador_normalizado, identificador_normalizado)
     )
     resultado = cursor.fetchone()
     conn.close()
@@ -147,7 +158,7 @@ def visualizar_carregador(id_usuario, id_carregador, serial_service=None):
                 reserva = reservar_carregador(id_usuario, id_carregador)
 
                 if reserva and serial_service:
-                    atualizar_status_carregador(id_carregador, "Reservado")
+                    atualizar_status_carregador(id_carregador, "RESERVED")
                     serial_service.enviar_comando(f"RESERVED:{id_carregador}")
                 return
             elif opcao == "2":
@@ -265,7 +276,6 @@ def atualizar_status_carregador(id_carregador, status_sistema):
         print(f"[CHARGER_MANAGER] Carregador nao encontrado: {id_carregador}")
         return False
 
-    print(f"[CHARGER_MANAGER] {id_carregador} -> {status_sistema}")
     return True
 
 def atualizar_status_por_hardware(identificador, status_arduino):
@@ -290,7 +300,14 @@ def obter_vagas_unidade(id_unidade):
     cursor.execute("SELECT COUNT(*) FROM carregadores WHERE id_unidade = ?", (id_unidade,))
     total_carregadores = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM carregadores WHERE id_unidade = ? AND status_atual = 'Disponivel'", (id_unidade,))
+    cursor.execute(
+        """
+        SELECT COUNT(*) FROM carregadores
+        WHERE id_unidade = ?
+          AND UPPER(status_atual) IN ('FREE', 'DISPONIVEL')
+        """,
+        (id_unidade,)
+    )
     carregadores_disponiveis = cursor.fetchone()[0]
     
     conn.close()

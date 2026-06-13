@@ -120,7 +120,7 @@ def popular_dados_teste(cursor):
         
         cursor.execute("""
             INSERT INTO carregadores (id_carregador, id_unidade, modelo, fabricante, tipo_corrente, potencia_kw, tipo_conector, preco_por_kwh, status_atual, tipo_monitoramento, id_hardware, permite_reserva, fila_virtual, plug_and_charge)
-            VALUES ('chg_001', '31123456', 'FastCharge v2', 'Volvo', 'DC', 50.0, 'CCS2', 1.99, 'FREE', 'hardware', 'HARDWARE_CHG001', 1, 0, 1)
+            VALUES ('chg_001', '31123456', 'FastCharge v2', 'Volvo', 'DC', 50.0, 'CCS2', 1.99, 'FREE', 'hardware', 'CHG001', 1, 0, 1)
         """)
         
         print("[DB] Logins e instâncias base criados com sucesso!")

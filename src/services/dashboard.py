@@ -61,8 +61,8 @@ def relatorio_carregadores(id_usuario):
     cursor.execute("""
         SELECT 
             COUNT(c.id_carregador) as total,
-            SUM(CASE WHEN LOWER(c.status_atual) = 'disponivel' THEN 1 ELSE 0 END) as disponiveis,
-            SUM(CASE WHEN LOWER(c.status_atual) = 'ocupado' THEN 1 ELSE 0 END) as ocupados,
+            SUM(CASE WHEN UPPER(c.status_atual) IN ('FREE', 'DISPONIVEL') THEN 1 ELSE 0 END) as disponiveis,
+            SUM(CASE WHEN UPPER(c.status_atual) IN ('IN_USE', 'OCUPADO') THEN 1 ELSE 0 END) as ocupados,
             SUM(CASE WHEN LOWER(c.status_atual) = 'offline' THEN 1 ELSE 0 END) as offline,
             SUM(CASE WHEN LOWER(c.status_atual) = 'manutencao' THEN 1 ELSE 0 END) as manutencao
         FROM carregadores c

@@ -5,22 +5,18 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 const String CHARGER_ID = "CHG001";
 
-const int BUTTON_PIN = 4;
+const int BUTTON_PIN = 6;
 const int RELAY_PIN = 2;
-const int ACS_PIN = A0;
+const int RELAY_ON_STATE = LOW;
+const int RELAY_OFF_STATE = HIGH;
 
 const int RED_PIN = 3;
-const int GREEN_PIN = 5;
-const int BLUE_PIN = 7;
-
-// ACS712 5A
-const float ACS_SENSITIVITY = 0.185;
-const float CURRENT_THRESHOLD = 0.05;
+const int YELLOW_PIN = 5;
+const int GREEN_PIN = 7;
 
 const unsigned long CODE_INTERVAL = 60000;
-const unsigned long CURRENT_INTERVAL = 1000;
 const unsigned long READY_INTERVAL = 3000;
-const unsigned long BUTTON_DEBOUNCE = 250;
+const unsigned long BUTTON_DEBOUNCE = 50;
 
 const int BUTTON_ACTIVE_STATE = HIGH;
 
@@ -28,47 +24,50 @@ bool authorized = false;
 bool reserved = false;
 bool freeMode = false;
 bool configured = false;
+bool charging = false;
 
 String currentCode = "";
 
 unsigned long lastCodeTime = 0;
-unsigned long lastCurrentTime = 0;
 unsigned long lastReadyTime = 0;
-unsigned long lastButtonTime = 0;
+unsigned long lastButtonChangeTime = 0;
+
+int lastButtonReading = LOW;
+int stableButtonState = LOW;
 
 String currentScreenLine1 = "";
 String currentScreenLine2 = "";
 
-void setRGB(bool red, bool green, bool blue)
+void setStatusLeds(bool red, bool yellow, bool green)
 {
     digitalWrite(RED_PIN, red);
+    digitalWrite(YELLOW_PIN, yellow);
     digitalWrite(GREEN_PIN, green);
-    digitalWrite(BLUE_PIN, blue);
 }
 
 void ledBlocked()
 {
-    setRGB(true, false, false);
+    setStatusLeds(true, false, false);
 }
 
 void ledReserved()
 {
-    setRGB(true, true, false);
+    setStatusLeds(false, true, false);
 }
 
 void ledFree()
 {
-    setRGB(false, true, false);
+    setStatusLeds(false, false, true);
 }
 
 void ledCharging()
 {
-    setRGB(false, false, true);
+    setStatusLeds(true, false, false);
 }
 
 void ledError()
 {
-    setRGB(true, false, true);
+    setStatusLeds(true, true, false);
 }
 
 void updateLCD(String line1, String line2)
@@ -90,23 +89,6 @@ void updateLCD(String line1, String line2)
     lcd.print(line2);
 }
 
-float readCurrent()
-{
-    long sum = 0;
-
-    for (int i = 0; i < 100; i++)
-    {
-        sum += analogRead(ACS_PIN);
-        delay(2);
-    }
-
-    float average = sum / 100.0;
-    float voltage = average * (5.0 / 1023.0);
-    float current = (voltage - 2.5) / ACS_SENSITIVITY;
-
-    return abs(current);
-}
-
 String generateCode()
 {
     return String(random(100000, 999999));
@@ -114,7 +96,7 @@ String generateCode()
 
 void setRelay(bool state)
 {
-    digitalWrite(RELAY_PIN, state ? HIGH : LOW);
+    digitalWrite(RELAY_PIN, state ? RELAY_ON_STATE : RELAY_OFF_STATE);
 }
 
 void showFree()
@@ -131,16 +113,13 @@ void showReserved()
 
 void showAuthorized()
 {
-    updateLCD("LIBERADO", CHARGER_ID);
+    updateLCD("Uso liberado", "Aperte o botao");
     ledFree();
 }
 
-void showCharging(float current)
+void showCharging()
 {
-    char currentText[17];
-    dtostrf(current, 4, 2, currentText);
-
-    updateLCD("EM USO", String(currentText) + " A");
+    updateLCD("Carregador", "ocupado");
     ledCharging();
 }
 
@@ -176,31 +155,46 @@ void authorizeCharger()
 {
     authorized = true;
     freeMode = false;
-    setRelay(true);
-
-    Serial.print("AUTHORIZED:");
-    Serial.println(CHARGER_ID);
+    charging = false;
+    setRelay(false);
 
     showAuthorized();
 }
 
-void authorizeFreeUse()
+void startCharging()
 {
     authorized = true;
-    freeMode = true;
+    charging = true;
     setRelay(true);
 
-    Serial.print("AUTHORIZED:");
-    Serial.println(CHARGER_ID);
+    Serial.print("HARDWARE:");
+    Serial.print(CHARGER_ID);
+    Serial.println(":IN_USE");
 
-    updateLCD("USO LIBERADO", "Conecte veiculo");
-    ledFree();
+    showCharging();
+}
+
+void stopCharging()
+{
+    authorized = false;
+    charging = false;
+    reserved = false;
+    freeMode = true;
+    currentCode = "";
+    setRelay(false);
+
+    Serial.print("HARDWARE:");
+    Serial.print(CHARGER_ID);
+    Serial.println(":FREE");
+
+    showFree();
 }
 
 void lockCharger()
 {
     authorized = false;
     freeMode = false;
+    charging = false;
     setRelay(false);
 
     Serial.print("LOCKED:");
@@ -226,6 +220,7 @@ void handleCommand(String command)
         reserved = false;
         authorized = false;
         freeMode = true;
+        charging = false;
         currentCode = "";
 
         setRelay(false);
@@ -237,6 +232,7 @@ void handleCommand(String command)
         reserved = true;
         authorized = false;
         freeMode = false;
+        charging = false;
 
         setRelay(false);
 
@@ -251,7 +247,7 @@ void handleCommand(String command)
     }
     else if (command == "DENY:" + CHARGER_ID)
     {
-        lockCharger();
+        stopCharging();
     }
     else if (command == "STOP:" + CHARGER_ID)
     {
@@ -260,6 +256,7 @@ void handleCommand(String command)
     else if (command == "ERROR:" + CHARGER_ID)
     {
         authorized = false;
+        charging = false;
         setRelay(false);
 
         showError();
@@ -275,8 +272,15 @@ void handleButtonPress()
         return;
     }
 
+    if (charging)
+    {
+        stopCharging();
+        return;
+    }
+
     if (authorized)
     {
+        startCharging();
         return;
     }
 
@@ -294,7 +298,7 @@ void handleButtonPress()
 
     if (freeMode)
     {
-        authorizeFreeUse();
+        startCharging();
     }
 }
 
@@ -302,16 +306,20 @@ void setup()
 {
     Serial.begin(9600);
 
+    digitalWrite(RELAY_PIN, RELAY_OFF_STATE);
     pinMode(RELAY_PIN, OUTPUT);
     pinMode(BUTTON_PIN, INPUT);
     pinMode(RED_PIN, OUTPUT);
     pinMode(GREEN_PIN, OUTPUT);
-    pinMode(BLUE_PIN, OUTPUT);
+    pinMode(YELLOW_PIN, OUTPUT);
 
     setRelay(false);
     ledBlocked();
 
-    randomSeed(analogRead(A1));
+    lastButtonReading = digitalRead(BUTTON_PIN);
+    stableButtonState = lastButtonReading;
+
+    randomSeed(micros());
 
     lcd.init();
     lcd.backlight();
@@ -323,7 +331,6 @@ void setup()
     sendReady();
 
     lastCodeTime = millis();
-    lastCurrentTime = millis();
     lastReadyTime = millis();
 
     updateLCD("Aguardando", "Sistema...");
@@ -345,16 +352,28 @@ void loop()
         lastReadyTime = now;
     }
 
-    if (
-        digitalRead(BUTTON_PIN) == BUTTON_ACTIVE_STATE &&
-        now - lastButtonTime >= BUTTON_DEBOUNCE
-    )
+    int buttonReading = digitalRead(BUTTON_PIN);
+
+    if (buttonReading != lastButtonReading)
     {
-        lastButtonTime = now;
-        handleButtonPress();
+        lastButtonChangeTime = now;
+        lastButtonReading = buttonReading;
     }
 
-    if (reserved && !authorized && now - lastCodeTime >= CODE_INTERVAL)
+    if (
+        now - lastButtonChangeTime >= BUTTON_DEBOUNCE &&
+        buttonReading != stableButtonState
+    )
+    {
+        stableButtonState = buttonReading;
+
+        if (stableButtonState == BUTTON_ACTIVE_STATE)
+        {
+            handleButtonPress();
+        }
+    }
+
+    if (reserved && !authorized && !charging && now - lastCodeTime >= CODE_INTERVAL)
     {
         sendNewCode();
         lastCodeTime = now;
@@ -362,43 +381,7 @@ void loop()
         showReserved();
     }
 
-    if (now - lastCurrentTime >= CURRENT_INTERVAL)
-    {
-        float current = readCurrent();
-
-        if (authorized)
-        {
-            if (current > CURRENT_THRESHOLD)
-            {
-                Serial.print("CURRENT:");
-                Serial.print(CHARGER_ID);
-                Serial.print(":HIGH:");
-                Serial.println(current, 3);
-
-                showCharging(current);
-            }
-            else
-            {
-                Serial.print("CURRENT:");
-                Serial.print(CHARGER_ID);
-                Serial.print(":LOW:");
-                Serial.println(current, 3);
-
-                if (freeMode)
-                {
-                    showFree();
-                }
-                else
-                {
-                    showAuthorized();
-                }
-            }
-        }
-
-        lastCurrentTime = now;
-    }
-
-    if (!authorized)
+    if (!charging)
     {
         setRelay(false);
     }

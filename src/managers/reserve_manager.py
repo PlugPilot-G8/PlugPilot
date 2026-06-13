@@ -59,7 +59,7 @@ def reservar_carregador(id_motorista, id_carregador=None):
         conn.close()
         return None
 
-    if carregador["status_atual"].upper() != "FREE":
+    if carregador["status_atual"].strip().upper() not in ("FREE", "DISPONIVEL"):
         print("Carregador indisponivel.")
         conn.close()
         return None

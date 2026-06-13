@@ -56,20 +56,16 @@ class SerialService:
 
         comando = self.normalizar_comando_arduino(comando)
         self.conexao.write((comando + "\n").encode("utf-8"))
-        print(f"Enviado: {comando}")
 
     def escutar(self):
         if self.conexao is None:
             print("Arduino nao conectado.")
             return
 
-        print("Monitorando Arduino...")
-
         while True:
             linha = self.conexao.readline().decode("utf-8", errors="ignore").strip()
 
             if linha:
-                print(f"Recebido: {linha}")
                 self.processar_linha(linha)
 
     def processar_linha(self, linha):
@@ -82,12 +78,6 @@ class SerialService:
 
         elif entidade == "CODE":
             self.processar_code(partes)
-
-        elif entidade == "CURRENT":
-            self.processar_current(partes)
-
-        elif entidade == "AUTHORIZED":
-            self.processar_authorized(partes)
 
         elif entidade == "LOCKED":
             self.processar_locked(partes)
@@ -126,33 +116,6 @@ class SerialService:
             "gerado_em": datetime.now(),
             "expira_em": datetime.now() + timedelta(seconds=60),
         }
-
-        print(f"Codigo ativo para {id_carregador}: {codigo}")
-
-    def processar_current(self, partes):
-        if len(partes) != 4:
-            return
-
-        _, id_carregador, estado_corrente, corrente = partes
-        id_carregador = self.normalizar_id_banco(id_carregador)
-
-        if estado_corrente == "HIGH":
-            status = "IN_USE"
-        else:
-            status = "FREE"
-
-        self.atualizar_status_callback(id_carregador, status)
-
-        print(f"{id_carregador} -> {status} | {corrente}A")
-
-    def processar_authorized(self, partes):
-        if len(partes) != 2:
-            return
-
-        _, id_carregador = partes
-        id_carregador = self.normalizar_id_banco(id_carregador)
-
-        self.atualizar_status_callback(id_carregador, "IN_USE")
 
     def processar_locked(self, partes):
         if len(partes) != 2:
