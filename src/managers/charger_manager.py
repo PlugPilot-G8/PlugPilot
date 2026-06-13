@@ -57,7 +57,7 @@ def cadastrar_carregador(id_unidade):
     potencia_kw = float(input("Digite a potencia em kW: "))
     tipo_conector = input("Digite o tipo de conector: ")
     preco_por_kwh = float(input("Digite o preco por kWh: "))
-    status_atual = input("Digite o status do carregador (Disponivel/Indisponivel): ")
+    status_atual = "Disponivel"
     ultima_manutencao = input("Digite a data da ultima manutencao (AAAA-MM-DD): ")
     id_hardware = input("Digite o ID do hardware Arduino (opcional): ").strip() or None
 

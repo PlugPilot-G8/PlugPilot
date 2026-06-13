@@ -57,31 +57,31 @@ Atualmente o projeto conta com:
 
 PlugFlow é o módulo de hardware do PlugPilot.
 
-### Fase 1
+Cada fase do desenvolvimento do protótipo foi realizada em aproximadamente uma semana.
 
-* botão
-* LED RGB
-* simulação de carregador disponível ou ocupado
+### Fase 1 — Comunicação serial com Python
 
-<img src="./docs/images/fase-1.jpeg" width="300"/>
+Primeira versão do Arduino, montada apenas com os componentes necessários para realizar a comunicação serial com o sistema Python.
 
-### Fase 2
+<img src="./docs/images/fase-1.jpeg" alt="Arduino preparado para comunicação serial com Python" width="500"/>
 
-* comunicação serial entre Arduino e Python
+### Fase 2 — Controle do funcionamento com relé
 
-![Protótipo fase 2](./docs/images/fase-2.jpeg)
+Integração do módulo relé ao Arduino, permitindo que o sistema controle fisicamente o funcionamento da carga conectada.
 
-### Fase 3
+<img src="./docs/images/fase-2-rele.jpeg" alt="Arduino controlando o funcionamento de uma carga com relé" width="500"/>
 
-* leitura de corrente elétrica por sensor
+### Fase 3 — LCD e código completo
 
-![Protótipo fase 3](./docs/images/fase-3.jpeg)
+Versão com tela LCD integrada e código completo, representando o protótipo funcional próximo de sua montagem final.
 
-### Fase 4
+<img src="./docs/images/fase-3-lcd.jpeg" alt="Arduino com tela LCD e código completo" width="500"/>
 
-* integração completa entre software e hardware
+### Fase 4 — Protótipo na case de MDF
 
-![Protótipo fase 4](./docs/images/fase-4.jpeg)
+Versão final do protótipo montada em uma case cortada em MDF, com tela LCD, botão de controle e indicadores luminosos.
+
+<img src="./docs/images/fase-4-case-mdf.jpeg" alt="Versão final do PlugFlow montada em uma case de MDF" width="500"/>
 
 ---
 

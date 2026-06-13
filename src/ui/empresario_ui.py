@@ -29,7 +29,7 @@ def menu_empresario(serial_service, id_usuario):
             print("Opção inválida. Por favor, tente novamente.")
 
 def menu_dashboard_empresario(serial_service, id_usuario):
-    from ..services.serial_service import (
+    from ..services.dashboard import (
         dashboard_empresario, 
         horarios_de_pico, 
         unidades_ativas, 
